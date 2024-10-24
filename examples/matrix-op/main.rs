@@ -307,4 +307,19 @@ mod tests {
 
         Ok(())
     }
+
+    #[test]
+    fn op() -> Result<()> {
+        let points = Tensor::rand(-1.0f32, 1.0, (4, 2), &Device::Cpu)?;
+        let centroid = points.mean(0)?;
+
+        let p1 = points.broadcast_sub(&centroid)?;
+        let centroid = Tensor::stack(&[&centroid, &centroid, &centroid, &centroid], 0)?;
+        println!("{:?}", centroid.dims());
+        let p2 = (&points - &centroid)?;
+
+        println!("{:?}", p1.to_vec2::<f32>()?);
+        println!("{:?}", p2.to_vec2::<f32>()?);
+        Ok(())
+    }
 }

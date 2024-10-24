@@ -6,13 +6,13 @@
 $ cargo run --example matrix-op
 ```
 
-使用方向鍵移動；使用 `a` 與 `s` 來旋轉。
+並使用方向鍵移動；使用 `a` 與 `s` 鍵來做旋轉。
 
 ## 範例說明
 
 ### 矩形頂點
 
-範例中，將矩形上的 4 個點，組成一個項點矩陣，如下：
+範例中，將矩形上的 4 個點，組成一個項點矩陣(4x2)，如下：
 
 $$
 \begin{bmatrix}
@@ -127,6 +127,31 @@ x_{4}^{d} & y_{4}^{d}
 \end{bmatrix}
 $$
 
+### 回到最初的位置
+
+由於旋轉前，將中心點移至原點，最後需要回到原本的位置，計算如下：
+
+$$
+\begin{bmatrix}
+x_{1}^{d} & y_{1}^{d} \\
+x_{2}^{d} & y_{2}^{d} \\
+x_{3}^{d} & y_{3}^{d} \\
+x_{4}^{d} & y_{4}^{d}
+\end{bmatrix}+
+\begin{bmatrix}
+C_{x} & C_{y} \\
+C_{x} & C_{y} \\
+C_{x} & C_{y} \\
+C_{x} & C_{y}
+\end{bmatrix}=
+\begin{bmatrix}
+x_{1}^{'} & y_{1}^{'} \\
+x_{2}^{'} & y_{2}^{'} \\
+x_{3}^{'} & y_{3}^{'} \\
+x_{4}^{'} & y_{4}^{'}
+\end{bmatrix}
+$$
+
 ## 範例中使用到的 Candle 函式
 
 ### Tensor 簡介
@@ -135,7 +160,7 @@ $$
 
 1. scalar: 純量，簡單來說，就是單一數值。
 1. vector: 向量，也就是一維陣列。
-1. matrix: 矩陣。
+1. matrix: 2 維或 3 維矩陣。
 
 Candle 支援的資料型別有：
 
@@ -151,8 +176,82 @@ Candle 支援的資料型別有：
 
 ### 建立 Tensor
 
+```rust
+Tensor::new(&[[1f32, 2.], [3., 4.]], &Device::Cpu)?
+```
+
 ### 運算
+
+### 中心點計算
+
+```rust
+let centroid = self.points.mean(0)?
+```
+
+### 中心點移至原點
+
+```rust
+let points = self.points.broadcast_sub(&centroid)?;
+```
+
+### 旋轉計算
+
+```rust
+let (sin, cos) = (angle.sin(), angle.cos());
+let rotation = Tensor::from_vec(&[[cos, sin], [-sin, cos]])?;
+let points = points.matmul(&rotation.t()?)?;
+```
+
+### 位移計算
+
+```rust
+let displacement = Tensor::from_vec(&[dx, dy], &Device::Cpu)?;
+let points = points.broadcast_add(&displacement)?;
+```
+
+### 回到原本位置
+
+```rust
+let points = points.broadcast_add(&centroid)?;
+```
 
 ## 延伸
 
+### 其他建立 Tensor 的方式
+
+```rust
+Tensor::from_vec(vec![1, 2, 3, 4, 5, 6], (2, 3), &Device::Cpu)?
+```
+
+```rust
+Tensor::from_iter(0..6, (2, 3), &Device::Cpu)?
+```
+
+```rust
+Tensor::rand(-1.0f32, 1.0, (4, 2), &Device::Cpu)?
+```
+
+### sum, mean
+
+```rust
+let sum = points.sum(0)?;
+let mean = points.mean(0)?;
+```
+
+### broadcast operation
+
+```rust
+points.broadcast_sub(&centroid)?;
+```
+
+```rust
+points.broadcast_add(&displacement)?;
+
+```
+
 ## 復盤
+
+1. 建立 Tensor
+1. broadcast_add and broadcast_sub
+1. matmul
+1. sum and mean
