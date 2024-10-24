@@ -215,43 +215,9 @@ let points = points.broadcast_add(&displacement)?;
 let points = points.broadcast_add(&centroid)?;
 ```
 
-## 延伸
-
-### 其他建立 Tensor 的方式
-
-```rust
-Tensor::from_vec(vec![1, 2, 3, 4, 5, 6], (2, 3), &Device::Cpu)?
-```
-
-```rust
-Tensor::from_iter(0..6, (2, 3), &Device::Cpu)?
-```
-
-```rust
-Tensor::rand(-1.0f32, 1.0, (4, 2), &Device::Cpu)?
-```
-
-### sum, mean
-
-```rust
-let sum = points.sum(0)?;
-let mean = points.mean(0)?;
-```
-
-### broadcast operation
-
-```rust
-points.broadcast_sub(&centroid)?;
-```
-
-```rust
-points.broadcast_add(&displacement)?;
-
-```
-
 ## 復盤
 
-1. 建立 Tensor
-1. broadcast_add and broadcast_sub
-1. matmul
-1. sum and mean
+1. `Tensor::new` 建立 Tensor
+1. `t.broadcast_add` and `t.broadcast_sub`
+1. `t.matmul` and `t.t()` to transpose
+1. `t.mean` to calculate mean
