@@ -4,6 +4,8 @@
 
 ## arithmetic
 
+test:  $y = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$
+
 ## broadcast op
 
 ## sum, mean and keepdim
