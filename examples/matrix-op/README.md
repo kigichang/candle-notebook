@@ -1,15 +1,158 @@
 # Candle 基本操作
 
-todo: 範例說明
+本範例是使用 [ratatui](https://ratatui.rs/) 中的 Canvas 功能，並使用 Candle 基本向量與矩陣運算，來實作 2D 繪圖。
 
-## 此範例使用的矩陣與向量運算
+```sh
+$ cargo run --example matrix-op
+```
 
-- 位移
-- 旋轉
-- 縮放
+使用方向鍵移動；使用 `a` 與 `s` 來旋轉。
 
-## Tensor 簡介
+## 範例說明
 
-- scalar: 0D tensor
-- vector: 1D tensor
-- matrix
+### 矩形頂點
+
+範例中，將矩形上的 4 個點，組成一個項點矩陣，如下：
+
+$$
+\begin{bmatrix}
+x_{1} & y_{1} \\
+x_{2} & y_{2} \\
+x_{3} & y_{3} \\
+x_{4} & y_{4}
+\end{bmatrix}
+$$
+
+### 中心點
+
+在進行旋轉時，會以矩形的中心點為基準，計算旋轉後的新位置。計算中心點的公式如下：
+
+$$
+C_{x} = \frac{x_{1} + x_{2} + x_{3} + x_{4}}{4}
+$$
+$$
+C_{y} = \frac{y_{1} + y_{2} + y_{3} + y_{4}}{4}
+$$
+
+在做旋轉前，會覺將中心點移到原點，得到新的頂點矩陣，公式如下：
+
+$$
+\begin{bmatrix}
+x_{1} & y_{1} \\
+x_{2} & y_{2} \\
+x_{3} & y_{3} \\
+x_{4} & y_{4}
+\end{bmatrix}-
+\begin{bmatrix}
+C_{x} & C_{y} \\
+C_{x} & C_{y} \\
+C_{x} & C_{y} \\
+C_{x} & C_{y}
+\end{bmatrix} =
+\begin{bmatrix}
+x_{1}^{c} & y_{1}^{c} \\
+x_{2}^{c} & y_{2}^{c} \\
+x_{3}^{c} & y_{3}^{c} \\
+x_{4}^{c} & y_{4}^{c}
+\end{bmatrix}
+$$
+
+### 旋轉
+
+一般做 2D 旋轉，會使用下列公式，其中，$\theta$ 是旋轉角度：
+
+$$
+\begin{bmatrix}
+cos\theta  & -sin\theta  \\
+sin\theta & cos\theta \\
+\end{bmatrix}
+\begin{bmatrix}
+x \\ y
+\end{bmatrix}
+$$
+
+在範例中的旋轉計算，會是項點矩轉，乘上轉置後的旋轉矩陣，如下：
+
+$$
+\begin{bmatrix}
+x_{1}^{c} & y_{1}^{c} \\
+x_{2}^{c} & y_{2}^{c} \\
+x_{3}^{c} & y_{3}^{c} \\
+x_{4}^{c} & y_{4}^{c}
+\end{bmatrix}
+\begin{bmatrix}
+cos\theta  & -sin\theta  \\
+sin\theta & cos\theta \\
+\end{bmatrix}^T =
+\begin{bmatrix}
+x_{1}^{c} & y_{1}^{c} \\
+x_{2}^{c} & y_{2}^{c} \\
+x_{3}^{c} & y_{3}^{c} \\
+x_{4}^{c} & y_{4}^{c}
+\end{bmatrix}
+\begin{bmatrix}
+cos\theta  & sin\theta  \\
+-sin\theta & cos\theta \\
+\end{bmatrix} =
+\begin{bmatrix}
+x_{1}^{r} & y_{1}^{r} \\
+x_{2}^{r} & y_{2}^{r} \\
+x_{3}^{r} & y_{3}^{r} \\
+x_{4}^{r} & y_{4}^{r}
+\end{bmatrix}
+$$
+
+### 位移
+
+將旋轉後的頂點矩陣，加上指定的 x, y 位移，即可得到位移後的頂點矩陣，如下：
+
+$$
+\begin{bmatrix}
+x_{1}^{r} & y_{1}^{r} \\
+x_{2}^{r} & y_{2}^{r} \\
+x_{3}^{r} & y_{3}^{r} \\
+x_{4}^{r} & y_{4}^{r}
+\end{bmatrix}-
+\begin{bmatrix}
+d_{x} & d_{y} \\
+d_{x} & d_{y} \\
+d_{x} & d_{y} \\
+d_{x} & d_{y}
+\end{bmatrix} =
+\begin{bmatrix}
+x_{1}^{d} & y_{1}^{d} \\
+x_{2}^{d} & y_{2}^{d} \\
+x_{3}^{d} & y_{3}^{d} \\
+x_{4}^{d} & y_{4}^{d}
+\end{bmatrix}
+$$
+
+## 範例中使用到的 Candle 函式
+
+### Tensor 簡介
+
+與 Pytorch 相同，Candle 操作的基本單位是 Tensor，Tensor 內的資料，可以是：
+
+1. scalar: 純量，簡單來說，就是單一數值。
+1. vector: 向量，也就是一維陣列。
+1. matrix: 矩陣。
+
+Candle 支援的資料型別有：
+
+- f32
+- f64
+- i64
+- u8
+- u32
+- bf16
+- f16
+
+但不同的平台 (CPU, GPU) 有不同的支援度，在練習的時候，可以預設使用 **f32**。
+
+### 建立 Tensor
+
+### 運算
+
+## 延伸
+
+## 復盤
