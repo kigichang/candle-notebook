@@ -1,4 +1,4 @@
-# Candle 基本操作
+# 如何用 Candle 來做 2D 繪圖
 
 這篇範例介紹如何使用 Candle 提供的向量和矩陣運算，搭配 [ratatui](https://ratatui.rs/) 的 Canvas 功能，實作簡單的 2D 繪圖。
 
@@ -6,7 +6,7 @@
 $ cargo run --example matrix-op
 ```
 
-運行程式後，可以使用**方向鍵**移動圖形，按 **a** 和 **s** 旋轉圖形。
+運行程式後，可以使用 **方向鍵** 移動圖形，按 **a** 和 **s** 旋轉圖形。
 
 ## 範例解說
 
@@ -110,7 +110,7 @@ x_{1}^{r} & y_{1}^{r} \\
 x_{2}^{r} & y_{2}^{r} \\
 x_{3}^{r} & y_{3}^{r} \\
 x_{4}^{r} & y_{4}^{r}
-\end{bmatrix}-
+\end{bmatrix}+
 \begin{bmatrix}
 d_{x} & d_{y} \\
 d_{x} & d_{y} \\
@@ -165,19 +165,19 @@ Candle 支援的資料型別有：
 
 不同平台 (CPU/GPU) 的支援度不一樣，平常可以預設使用 **f32**。
 
-### 建立 Tensor
+#### 建立 Tensor
 
 ```rust
 Tensor::new(&[[1f32, 2.], [3., 4.]], &Device::Cpu)?
 ```
 
-可以直拉使用 `Tensor::new` 的方式，給定一個 array 產生一個 tensor，第二個參數是指定要使用 CPU 還是 GPU。
+這段程式碼會在 **CPU** 上建立一個 Tensor。第二個參數是指定要使用 **CPU** 還是 **GPU**。
 
 ### 運算範例
 
 #### 計算中心點
 
-要計算矩形的中心點，我們可以用 `tensor.mean()`，並指定維度 **0** (即第一維度)：
+要計算矩形的中心點，我們可以用 `tensor.mean()`，並指定參數為 **0** (即第一維度)：
 
 ```rust
 let centroid = self.points.mean(0)?
@@ -192,7 +192,7 @@ $$
 
 #### 中心點移至原點
 
-由於頂點是 **4x2** 矩陣，而中心點是 **2 維**向量，要做運算前，需要進行 `broadcast` 相關函式：
+由於頂點是 **4x2** 矩陣，而中心點是 **2 維**向量，要做運算前，需要使用 `broadcast` 相關函式：
 
 ```rust
 let points = self.points.broadcast_sub(&centroid)?;

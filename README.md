@@ -8,7 +8,7 @@
 
 ## 筆記內容 (持續更新中)
 
-1. *[matrix-op](examples/matrix-op/README.md): 透過 2D 繪圖，學習 Candle 的基本操作。
+1. [matrix-op](examples/matrix-op/README.md): 透過 2D 繪圖，學習 Candle 的基本操作。
 1. *[tensor-op](examples/tensor-op/README.md): 介紹 Tensor 常用的操作技巧。
 1. *[mnist-training](examples/mnist-training/README.md): 參考 Candle 的 [Mnist](https://github.com/huggingface/candle/blob/main/candle-examples/examples/mnist-training/main.rs)範例，說明如何用 Candle 進行模型訓練。
 1. *[crf](examples/crf/README.md): 分享怎麼把 [Pytorch 版的 Conditional Random Field (CRF)](https://github.com/kmkurn/pytorch-crf) 移植到 Candle 上。
