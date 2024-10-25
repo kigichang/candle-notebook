@@ -1,18 +1,18 @@
 # Candle 基本操作
 
-本範例是使用 [ratatui](https://ratatui.rs/) 中的 Canvas 功能，並使用 Candle 基本向量與矩陣運算，來實作 2D 繪圖。
+這篇範例介紹如何使用 Candle 提供的向量和矩陣運算，搭配 [ratatui](https://ratatui.rs/) 的 Canvas 功能，實作簡單的 2D 繪圖。
 
 ```sh
 $ cargo run --example matrix-op
 ```
 
-並使用方向鍵移動；使用 `a` 與 `s` 鍵來做旋轉。
+運行程式後，可以使用**方向鍵**移動圖形，按 **a** 和 **s** 旋轉圖形。
 
-## 範例說明
+## 範例解說
 
 ### 矩形頂點
 
-範例中，將矩形上的 4 個點，組成一個項點矩陣(4x2)，如下：
+這個範例將矩形的 4 個頂點組成一個 4x2 矩陣，表示如下：
 
 $$
 \begin{bmatrix}
@@ -23,20 +23,24 @@ x_{4} & y_{4}
 \end{bmatrix}
 $$
 
-### 中心點
+### 中心點計算
 
-在進行旋轉時，會以矩形的中心點為基準，計算旋轉後的新位置。計算中心點的公式如下：
+旋轉圖形時，我們會以矩形的中心點為基準來計算新位置。中心點的公式如下：
 
 $$
-C_{x} = \frac{x_{1} + x_{2} + x_{3} + x_{4}}{4}
-$$
-$$
+C_{x} = \frac{x_{1} + x_{2} + x_{3} + x_{4}}{4},
 C_{y} = \frac{y_{1} + y_{2} + y_{3} + y_{4}}{4}
 $$
 
-在做旋轉前，會先將中心點移到原點，得到新的頂點矩陣，公式如下：
+在旋轉之前，我們要先將矩形的中心點移到原點。移動後的頂點矩陣如下：
 
 $$
+新的頂點矩陣 \begin{bmatrix}
+x_{1}^{c} & y_{1}^{c} \\
+x_{2}^{c} & y_{2}^{c} \\
+x_{3}^{c} & y_{3}^{c} \\
+x_{4}^{c} & y_{4}^{c}
+\end{bmatrix}=
 \begin{bmatrix}
 x_{1} & y_{1} \\
 x_{2} & y_{2} \\
@@ -48,18 +52,12 @@ C_{x} & C_{y} \\
 C_{x} & C_{y} \\
 C_{x} & C_{y} \\
 C_{x} & C_{y}
-\end{bmatrix} =
-\begin{bmatrix}
-x_{1}^{c} & y_{1}^{c} \\
-x_{2}^{c} & y_{2}^{c} \\
-x_{3}^{c} & y_{3}^{c} \\
-x_{4}^{c} & y_{4}^{c}
 \end{bmatrix}
 $$
 
 ### 旋轉
 
-一般做 2D 旋轉，會使用下列公式：
+進行 2D 旋轉時，我們會用以下的旋轉矩陣：
 
 $$
 \begin{bmatrix}
@@ -71,7 +69,7 @@ x \\ y
 \end{bmatrix}
 $$
 
-在範例中的旋轉計算，是項點矩轉，乘上轉置後的旋轉矩陣，如下：
+在範例中，我們使用頂點矩陣與轉置後的旋轉矩陣相乘：
 
 $$
 \begin{bmatrix}
@@ -104,7 +102,7 @@ $$
 
 ### 位移
 
-將旋轉後的頂點矩陣，加上指定的 x, y 位移，即可得到位移後的頂點矩陣，如下：
+接著，將旋轉後的頂點加上指定的 x 和 y 位移，得到位移後的新頂點：
 
 $$
 \begin{bmatrix}
@@ -127,9 +125,9 @@ x_{4}^{d} & y_{4}^{d}
 \end{bmatrix}
 $$
 
-### 回到最初的位置
+### 回到原位置
 
-由於旋轉前，將中心點移至原點，最後需要回到原本的位置，計算如下：
+最後，我們再將原本移到原點的中心點加回來：
 
 $$
 \begin{bmatrix}
@@ -152,27 +150,20 @@ x_{4}^{'} & y_{4}^{'}
 \end{bmatrix}
 $$
 
-## 範例中使用到的 Candle 函式
+## Candle 的函式使用
 
 ### Tensor 簡介
 
-與 Pytorch 相同，Candle 操作的基本單位是 Tensor，Tensor 內的資料，可以是：
+和 PyTorch 一樣，Candle 的基本運算單位是 Tensor，它可以儲存：
 
-1. scalar: 純量，簡單來說，就是單一數值。
-1. vector: 向量，也就是一維陣列。
-1. matrix: 2 維或 3 維矩陣。
+1. scalar: 純量，即單一數值。
+1. vector: 向量，即一維陣列。
+1. matrix: 矩陣 (二維或三維陣列)。
 
 Candle 支援的資料型別有：
+`f32, f64, i64, u8, u32, bf16, f16`
 
-- f32
-- f64
-- i64
-- u8
-- u32
-- bf16
-- f16
-
-但不同的平台 (CPU, GPU) 有不同的支援度，在練習的時候，可以預設使用 **f32**。
+不同平台 (CPU/GPU) 的支援度不一樣，平常可以預設使用 **f32**。
 
 ### 建立 Tensor
 
@@ -180,36 +171,55 @@ Candle 支援的資料型別有：
 Tensor::new(&[[1f32, 2.], [3., 4.]], &Device::Cpu)?
 ```
 
-### 運算
+可以直拉使用 `Tensor::new` 的方式，給定一個 array 產生一個 tensor，第二個參數是指定要使用 CPU 還是 GPU。
 
-### 中心點計算
+### 運算範例
+
+#### 計算中心點
+
+要計算矩形的中心點，我們可以用 `tensor.mean()`，並指定維度 **0** (即第一維度)：
 
 ```rust
 let centroid = self.points.mean(0)?
 ```
 
-### 中心點移至原點
+這相當於計算：
+
+$$
+C_{x} = \frac{x_{1} + x_{2} + x_{3} + x_{4}}{4},
+C_{y} = \frac{y_{1} + y_{2} + y_{3} + y_{4}}{4}
+$$
+
+#### 中心點移至原點
+
+由於頂點是 **4x2** 矩陣，而中心點是 **2 維**向量，要做運算前，需要進行 `broadcast` 相關函式：
 
 ```rust
 let points = self.points.broadcast_sub(&centroid)?;
 ```
 
-### 旋轉計算
+#### 旋轉矩陣計算
+
+使用 `tensor.t()` 將旋轉矩陣轉置，再進行矩陣相乘 `t.matmul()`：
 
 ```rust
-let (sin, cos) = (angle.sin(), angle.cos());
-let rotation = Tensor::from_vec(&[[cos, sin], [-sin, cos]])?;
+let (s, c) = theta.sin_cos();
+let rotation = Tensor::new(&[[c, -s], [s, c]], &Device::Cpu?)
 let points = points.matmul(&rotation.t()?)?;
 ```
 
-### 位移計算
+#### 位移計算
+
+由於位移 `displacement` 是向量，我們使用 `broadcast_add` 進行運算：
 
 ```rust
-let displacement = Tensor::from_vec(&[dx, dy], &Device::Cpu)?;
+let displacement = Tensor::new(&[dx, dy], &Device::Cpu)?;
 let points = points.broadcast_add(&displacement)?;
 ```
 
-### 回到原本位置
+#### 回到原位置
+
+回到原位置同樣使用 `broadcast_add`：
 
 ```rust
 let points = points.broadcast_add(&centroid)?;
@@ -217,7 +227,12 @@ let points = points.broadcast_add(&centroid)?;
 
 ## 復盤
 
-1. `Tensor::new` 建立 Tensor
-1. `t.broadcast_add` and `t.broadcast_sub`
-1. `t.matmul` and `t.t()` to transpose
-1. `t.mean` to calculate mean
+1. 用 `Tensor::new` 建立 Tensor。
+1. 用 `t.mean()` 計算平均值。
+1. 用 `t.broadcast_add()` 和 `t.broadcast_sub()` 做矩陣與向量運算。
+1. 用 `t.t()` 進行矩陣轉置。
+1. 用 `t.matmul()` 做矩陣乘法。
+
+## Next
+
+前往 [tensor-op](../tensor-op/README.md) 了解更多 tensor 操作。

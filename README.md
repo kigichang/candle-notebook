@@ -14,4 +14,5 @@
 1. *[crf](examples/crf/README.md): 分享如何將 [Pytorch 版的 Conditional Random Field (CRF)](https://github.com/kmkurn/pytorch-crf) 移植到 Candle 上。
 1. *[rnn](examples/rnn/README.md): 以 LSTM 為例，分享如何擴充 Candle 不足的功能。
 1. *[bert-base-chinese](examples/bert-base-chinese/README.md): 使用 [google-bert/bert-base-chinese](https://huggingface.co/google-bert/bert-base-chinese)，學習如何使用 Huggingface 的 Pretrained Model。
+1. *[platform](examples/platform/README.md): Candle 在 Apple Silicon, Intel CPU 與 Nvidia GPU 上的使用。
 1. *[CheatSheet](Cheatsheet.md)
