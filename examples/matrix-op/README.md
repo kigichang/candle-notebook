@@ -61,7 +61,7 @@ $$
 
 $$
 \begin{bmatrix}
-x y
+x & y
 \end{bmatrix}
 \begin{bmatrix}
 cos\theta  & -sin\theta  \\
