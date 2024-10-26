@@ -61,12 +61,13 @@ $$
 
 $$
 \begin{bmatrix}
-cos\theta  & -sin\theta  \\
-sin\theta & cos\theta \\
-\end{bmatrix}
-\begin{bmatrix}
 x \\ y
 \end{bmatrix}
+\begin{bmatrix}
+cos\theta  & -sin\theta  \\
+sin\theta & cos\theta \\
+\end{bmatrix}^T
+
 $$
 
 在範例中，我們使用頂點矩陣與轉置後的旋轉矩陣相乘：
