@@ -152,9 +152,9 @@ $$
 
 ## Candle 的函式使用
 
-### 張量(Tensor) 簡介
+### 張量 (Tensor) 簡介
 
-和 PyTorch 一樣，Candle 的基本運算單位是張量(Tensor)，它可以儲存：
+和 PyTorch 一樣，Candle 的基本運算單位是張量 (Tensor)，它可以儲存：
 
 1. scalar: 純量，即單一數值。
 1. vector: 向量，即一維陣列。
