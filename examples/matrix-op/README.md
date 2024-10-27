@@ -152,9 +152,9 @@ $$
 
 ## Candle 的函式使用
 
-### Tensor 簡介
+### 張量(Tensor) 簡介
 
-和 PyTorch 一樣，Candle 的基本運算單位是 Tensor，它可以儲存：
+和 PyTorch 一樣，Candle 的基本運算單位是張量(Tensor)，它可以儲存：
 
 1. scalar: 純量，即單一數值。
 1. vector: 向量，即一維陣列。
@@ -165,13 +165,13 @@ Candle 支援的資料型別有：
 
 不同平台 (CPU/GPU) 的支援度不一樣，平常可以預設使用 **f32**。
 
-#### 建立 Tensor
+#### 建立張量
 
 ```rust
 Tensor::new(&[[1f32, 2.], [3., 4.]], &Device::Cpu)?
 ```
 
-這段程式碼會在 **CPU** 上建立一個 Tensor。第二個參數是指定要使用 **CPU** 還是 **GPU**。
+這段程式碼會在 **CPU** 上建立一個張量。第二個參數是指定要使用 **CPU** 還是 **GPU**。
 
 ### 運算範例
 
@@ -235,4 +235,4 @@ let points = points.broadcast_add(&centroid)?;
 
 ## Next
 
-前往 [tensor-op](../tensor-op/README.md) 了解更多 tensor 操作。
+前往 [tensor-op](../tensor-op/README.md) 了解更多張量操作。
