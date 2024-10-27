@@ -88,10 +88,14 @@ see [tensor_full.rs](../../tests/tensor_full.rs)
 `Tensor::rand` 給定隨機值範圍 [lo, up)，維度與裝置，產生隨機數值的張量。
 `t.rand_like` 從已知的 Tensor `t` 產生隨機數值的張量。新的張量會與原來的張量有相同維度，資料型別，並在相同裝置上。
 
+see [tensor_rand.rs](../../tests/tensor_rand.rs)
+
 ### 產生常態分佈內容的張量 `Tensor::randn` and `t.randn_like`
 
 `Tensor::randn` 給定平均、標準差，維度與裝置，產生從給定平均、標準差的常態分佈中取樣的張量。
 `t.randn_like` 從已知的張量 `t` 產生從常態分佈中取樣的張量。新的張量會與原來的張量有相同維度，資料型別，並在相同裝置上。
+
+see [tensor_randn.rs](../../tests/tensor_randn.rs)
 
 ### 從張量取值 `t.to_scalar` and `t.to_vecX`
 
