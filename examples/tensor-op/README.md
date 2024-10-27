@@ -4,6 +4,20 @@
 
 ## 張量建立與轉型
 
+Candle 張量支援的資料型別 (DType) 有：`U8, U32, I64, BF16, F16, F32, F64`。對應的 Rust 資料型別如下：
+
+| DType | Rust Type |
+| --- | --- |
+| U8 | u8 |
+| U32 | u32 |
+| I64 | i64 |
+| BF16 | half::bf16 |
+| F16 | half::f16 |
+| F32 | f32 |
+| F64 | f64 |
+
+在建立張量時，需留意給定的 Rust 資料型別是否符合 Candle 張量支援的 DType。
+
 ### 建立張量 `Tensor::new`
 
 `Tensor::new()` 依輸入的內容，在指定的裝置上建立一個新的張量。
@@ -83,19 +97,7 @@ see [tensor_full.rs](../../tests/tensor_full.rs)
 
 ### 轉型張量內容資料型別 `t.to_dtype`
 
-DType: `U8, U32, I64, BF16, F16, F32, F64`
-
-| DType | Rust Scalar Type |
-| --- | --- |
-| U8 | u8 |
-| U32 | u32 |
-| I64 | i64 |
-| BF16 | half::bf16 |
-| F16 | half::f16 |
-| F32 | f32 |
-| F64 | f64 |
-
-## 取得張量維度與重設維度 `t.rank`, `t.dim`, and `t.reshape`
+### 取得張量維度與重設維度 `t.rank`, `t.dim`, and `t.reshape`
 
 ## arithmetic
 
@@ -115,8 +117,6 @@ DType: `U8, U32, I64, BF16, F16, F32, F64`
 ## argmax and argmin
 
 ## stack and cat
-
-## view and reshape
 
 ## transpose
 
