@@ -97,11 +97,60 @@ see [tensor_rand.rs](../../tests/tensor_rand.rs)
 
 see [tensor_randn.rs](../../tests/tensor_randn.rs)
 
-### 從張量取值 `t.to_scalar` and `t.to_vecX`
+### 張量維度 `t.rank`, `t.dim`, and `t.reshape`
 
-### 轉型張量內容資料型別 `t.to_dtype`
+#### 取得張量維度 `t.rank`
 
-### 取得張量維度與重設維度 `t.rank`, `t.dim`, and `t.reshape`
+由 `t.rank()` 回傳值，可以取得張量的維度：
+
+**0**: 純量
+**1**: 向量
+**n >= 1**: n 維矩陣
+
+#### 取得每個維度大小 `t.dims` and `t.dimsN`
+
+如要取得每個維度的大小，可以使用 `t.dims()`，回傳 `&[usize]`，即每個維度的大小，如 2x3x4 矩陣，回傳 `[2, 3, 4]`。
+如已知張量維度，可以利用 `t.dimsN` 取得所有維度的大小。如已知張量維度為 **3**，則 `let (d0, d1, d2) = t.dims3()?;` 取得所有維度的大小。
+
+#### 取得每個維度大小 `t.dim` 與 `D::Minus`
+
+`Tensor::dim` 取得指定維度的大小，如 2x3x4 矩陣，`t.dim(0)?` 取得第一個維度大小 **2**。
+
+`D::Minus1`，是指張量的最後一個維度，如 2x3x4 矩陣，`t.dim(D::Minus1)?` 取得最後一個維度大小 **4**。
+`D::Minus2`，是指張量的倒數第二個維度，如 2x3x4 矩陣，`t.dim(D::Minus2)?` 取得倒數第二個維度大小 **3**。
+`D::Minus1` 在之後操作中，會經常使用到。
+
+#### 利用既有張量，產生新維度張量 `t.reshape`
+
+`reshape` 可以透過既有的張量，產生一個指定維度的新張量，新張量的總元素數量必須與舊張量相同。如 **24** 個元素的向量，可以產生新的 **2x3x4** 矩陣。
+
+```rust
+// vector with 24 elements
+let t = Tensor::arange(0u32, 24u32, &Device::Cpu)?;
+// convert to 2x3x4 矩陣
+let t = t.reshape((2, 3, 4))?;
+```
+
+see [tensor_dim.rs](../../tests/tensor_dim.rs)
+
+### 取出張量內容 `t.to_scalar` and `t.to_vecX`
+
+要取出張量內容，首先需先知道張量的維度，再使用 `to_scalar` 或 `to_vecX` 取出張量內容。
+
+1. scalar: `t.to_scalar`
+1. vector: `t.to_vec1`
+1. 2維矩陣: `t.to_vec2`
+1. 3維矩陣: `t.to_vec3`
+
+在取出張量內容時，需留意張量的維度是否與取出的資料型別相符，否則會產生錯誤。
+
+see [tensor_get_values.rs](../../tests/tensor_get_values.rs)
+
+### 透過既有的張量，產生新型別張量 `t.to_dtype`
+
+利用 `t.to_dtype` 可以透過既有的張量，產生新的資料型別張量，如從 `u32` 轉換成 `f32`。新的張量會與原來的張量有相同維度，並在相同裝置上。
+
+see [tensor_to_dtype.rs](../../tests/tensor_to_dtype.rs)
 
 ## arithmetic
 
