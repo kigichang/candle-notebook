@@ -3,7 +3,7 @@
 這篇範例介紹如何使用 Candle 提供的向量和矩陣運算，搭配 [ratatui](https://ratatui.rs/) 的 Canvas 功能，實作簡單的 2D 繪圖。
 
 ```sh
-$ cargo run --example matrix-op
+$ cargo run --example matrix-op --release
 ```
 
 運行程式後，可以使用 **方向鍵** 移動圖形，按 **a** 和 **s** 旋轉圖形。
