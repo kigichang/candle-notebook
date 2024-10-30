@@ -1,12 +1,12 @@
-# 張量 (Tensor) 建立與操作
+# 張量 (Tensor) 建立與四則運算
 
-此範例主要以 Rust Test 展示張量操作，方後日後開發參考用。
+這份教學主要展示如何用 Rust 來操作張量 (Tensor)，提供未來開發參考。
 
-## 張量建立與轉型
+## 一、張量建立
 
-Candle 張量支援的資料型別 (DType) 有：`U8, U32, I64, BF16, F16, F32, F64`。對應的 Rust 資料型別如下：
+Candle 張量支援的資料型別如下：
 
-| DType | Rust Type |
+| DType | 對應 Rust 型別 |
 | --- | --- |
 | U8 | u8 |
 | U32 | u32 |
@@ -16,163 +16,216 @@ Candle 張量支援的資料型別 (DType) 有：`U8, U32, I64, BF16, F16, F32, 
 | F32 | f32 |
 | F64 | f64 |
 
-在建立張量時，需留意給定的 Rust 資料型別是否符合 Candle 張量支援的 DType。
+在建立張量時，要確保 Rust 的資料型別對應到 Candle 支援的 DType。
 
-### 建立張量 `Tensor::new`
+### 1. 使用 `Tensor::new` 建立張量
 
-`Tensor::new()` 依輸入的內容，在指定的裝置上建立一個新的張量。
-`new` 第一個參數是 `NdArray`，可以是：
+`Tensor::new()` 可以根據你提供的內容和裝置，建立一個新的張量。
 
-1. scalar
-1. Vector
-1. 1 ~ 4 維陣列 (array)
+* 第一個參數是 `NdArray`，可以是：
+  * scalar
+  * Rust `Vector`
+  * 1 ~ 4 維陣列 (array)
 
-see [tensor_new.rs](../../tests/tensor_new.rs)
+👉 範例程式：[tensor_new.rs](../../tests/tensor_new.rs)
 
-### 從 Vector 建立張量 `Tensor::from_vec`
+### 2. 使用 `Tensor::from_vec` 透過 Rust `Vec` 建立張量
 
-`Tensor::from_vec()` 給定 Vector 在指定的裝置上，產生指定維度的張量。
-`from_vec` 的第二個參數是 `Into<Shape>`，即可以轉換成 `Shape` 的型別，常用型別有：
+`Tensor::from_vec()` 接收 `Vec` 並生成指定維度的張量。
 
-1. `()` 空元組，產生純量張量。
-1. `usize` 產生向量。
-1. tuple，可用來產生 1 ~ 6 維的張量。
-1. `Vec<usize>` 產生 1 ~ 6 維的張量。
+* 第二個參數要能轉換成 `Shape`，可以是：
+  * 空元組 ()：產生純量。
+  * `usize`：產生向量
+  * 多個數字組成的數組(Tuple)：產生 1～6 維的張量。
+  * `Vec<usize>`：同樣可生成 1～6 維張量。
 
-see [tensor_from_vec.rs](../../tests/tensor_from_vec.rs)
+👉 範例程式：[tensor_from_vec.rs](../../tests/tensor_from_vec.rs)
 
-### 從切片 (slice) 建立張量 `Tensor::from_slice`
+### 3. 使用 `Tensor::from_slice` 透過 Slice 建立張量
 
-`Tensor::from_slice` 與 `Tensor::from_vec()` 類似，給定 Slice 在指定的裝置上，產生指定維度的張量。
+和 `from_vec` 類似，使用 Slice 建立張量。
 
-see [tensor_from_slice.rs](../../tests/tensor_from_slice.rs)
+👉 範例程式：[tensor_from_slice.rs](../../tests/tensor_from_slice.rs)
 
-### 從 iterator 建立張量 `Tensor::from_iter`
+### 4. 使用 `Tensor::from_iter` 透過 Iterator 建立張量
 
-`Tensor::from_iter` 產生向量(一維張量)。
+`Tensor::from_iter()` 接受實作了 `IntoIterator` 特徵(`trait`)的資料，並產生向量。
 
-see [tensor_from_iter.rs](../../tests/tensor_from_iter.rs)
+👉 範例程式：[tensor_from_iter.rs](../../tests/tensor_from_iter.rs)
 
-### 從等差數列建立張量 `Tensor::arange` and `Tensor::arange_step`
+### 5. 使用 `Tensor::arange` 與 `Tensor::arange_step` 建立內容為等差數列張量
 
-`Tensor::arange` 給定 [start, end)，即大於等於start 且小於 end 範圍，等差為 **1**，產生向量。
-`Tensor::arange_step` 給定 [start, end) 與等差，產生向量。
+* `Tensor::arange`：給定範圍 [start, end) 並以 1 為間隔。
+* `Tensor::arange_step`: 可以自定間隔。
+    注意：若使用浮點數，可能會因精度問題導致意外結果。
 
-在使用 `arnge_step` 需留意浮點數的精度問題，可能會產生不預期的結果。
+👉 範例程式：[tensor_arange.rs](../../tests/tensor_arange.rs)
 
-see [tensor_arange.rs](../../tests/tensor_arange.rs)
+## 二、建立特殊張量
 
-### 建立內容全是 0 的張量 `Tensor::zeros` and `t.zeros_like`
+### 1. 建立內容全是 0 的張量
 
-`Tensor::zeros` 給定維度，資料型別與裝置，產生全為 **0** 的張量。
-`Tensor::zeros` 第二個參數是 `DType`，可以是：`U8, U32, I64, BF16, F16, F32, F64`。
+* `Tensor::zeros` 給定維度，資料型別與裝置，產生全為 **0** 的張量。`Tensor::zeros` 第二個參數是 `DType`，可以是：`U8, U32, I64, BF16, F16, F32, F64`。
+* `t.zeros_like` 從已知的張量 `t` 產生全為 **0** 的張量。新的張量會與原來的張量有相同維度，並在相同裝置上。
 
-`t.zeros_like` 從已知的張量 `t` 產生全為 **0** 的張量。新的張量會與原來的張量有相同維度，並在相同裝置上。
+👉 範例程式：[tensor_zeros.rs](../../tests/tensor_zeros.rs)
 
-see [tensor_zeros.rs](../../tests/tensor_zeros.rs)
-
-### 建立內容全是 1 的張量 `Tensor::ones` and `Tensor::ones_like`
+### 2. 建立內容全是 1 的張量
 
 `Tensor::ones`，`t.ones_like` 與 `t.zeros`，`t.zeros_like` 類似，只是產生全為 **1** 張量。
 
-see [tensor_ones.rs](../../tests/tensor_ones.rs)
+👉 範例程式：[tensor_ones.rs](../../tests/tensor_ones.rs)
 
-### 產生內容全是指定數值的張量 `Tensor::full`
+### 3. 指定值的張量
 
-`Tensor::full` 給定數值，維度裝置，產生全為指定值的張量。
+`Tensor::full` 給定一個數值，生成所有元素都為該數值的張量。
 
-see [tensor_full.rs](../../tests/tensor_full.rs)
+👉 範例程式：[tensor_full.rs](../../tests/tensor_full.rs)
 
-### 產生隨機內容的張量 `Tensor::rand` and `t.rand_like`
+### 4. 隨機內容的張量
 
-`Tensor::rand` 給定隨機值範圍 [lo, up)，維度與裝置，產生隨機數值的張量。
-`t.rand_like` 從已知的 Tensor `t` 產生隨機數值的張量。新的張量會與原來的張量有相同維度，資料型別，並在相同裝置上。
+`Tensor::rand`: 生成在範圍 [lo, up) 內的隨機值。
+`t.rand_like`: 基於既有張量 `t`，產生相同大小的隨機張量。
 
-see [tensor_rand.rs](../../tests/tensor_rand.rs)
+👉 範例程式：[tensor_rand.rs](../../tests/tensor_rand.rs)
 
-### 產生常態分佈內容的張量 `Tensor::randn` and `t.randn_like`
+### 5. 常態分佈張量
 
-`Tensor::randn` 給定平均、標準差，維度與裝置，產生從給定平均、標準差的常態分佈中取樣的張量。
-`t.randn_like` 從已知的張量 `t` 產生從常態分佈中取樣的張量。新的張量會與原來的張量有相同維度，資料型別，並在相同裝置上。
+* `Tensor::randn` 生成給定平均，標準差的常態分佈張量。
+`t.randn_like` 基於既有張量 `t` 產生相同大小的常態分佈張量。
 
-see [tensor_randn.rs](../../tests/tensor_randn.rs)
+👉 範例程式：[tensor_randn.rs](../../tests/tensor_randn.rs)
+
+## 三、張量的維度操作
 
 ### 張量維度 `t.rank`, `t.dim`, and `t.reshape`
 
 #### 取得張量維度 `t.rank`
 
-由 `t.rank()` 回傳值，可以取得張量的維度：
+* `t.rank()`：取得張量的維度數，例如：
+  * **0**: 純量
+  * **1**: 向量
+  * **N > 1**: N 維張量
 
-**0**: 純量
-**1**: 向量
-**n >= 1**: n 維矩陣
+* `t.dims()`: 回傳每個維度的大小，例如 **2x3x4** 張量會回傳 `&[2, 3, 4]`。
+* `t.dimsN`: 如已知張量維度，可以利用 `t.dimsN` 取得所有維度的大小。
 
-#### 取得每個維度大小 `t.dims` and `t.dimsN`
+    ```rust
+    let (d0, d1, d2) = t.dims3()?;
+    ```
 
-如要取得每個維度的大小，可以使用 `t.dims()`，回傳 `&[usize]`，即每個維度的大小，如 2x3x4 矩陣，回傳 `[2, 3, 4]`。
-如已知張量維度，可以利用 `t.dimsN` 取得所有維度的大小。如已知張量維度為 **3**，則 `let (d0, d1, d2) = t.dims3()?;` 取得所有維度的大小。
+* `t.dim(index)`: 取得指定維度大小，像是 `t.dim(0)? 會回傳第一個維度的大小。
+* `D::Minus`: 倒數第幾個維度
+  * `D::Minus1`，是指張量的最後一個維度，如 2x3x4 張量，`t.dim(D::Minus1)?` 取得最後一個維度大小 **4**。
+  * `D::Minus2`，是指張量的倒數第二個維度，如 2x3x4 張量，`t.dim(D::Minus2)?` 取得倒數第二個維度大小 **3**。
+  * `D::Minus1` 在之後操作中，會經常使用到。
+* `t.reshape`: 利用既有張量，產生新維度張量。新張量的元素數量必須與舊張量相同。如 **24** 個元素的向量，可以產生新的 **2x3x4** 3D 張量。
 
-#### 取得每個維度大小 `t.dim` 與 `D::Minus`
+    ```rust
+    // vector with 24 elements
+    let t = Tensor::arange(0u32, 24u32, &Device::Cpu)?;
+    // convert to 2x3x4 張量
+    let t = t.reshape((2, 3, 4))?;
+    ```
 
-`Tensor::dim` 取得指定維度的大小，如 2x3x4 矩陣，`t.dim(0)?` 取得第一個維度大小 **2**。
+👉 範例程式：[tensor_dim.rs](../../tests/tensor_dim.rs)
 
-`D::Minus1`，是指張量的最後一個維度，如 2x3x4 矩陣，`t.dim(D::Minus1)?` 取得最後一個維度大小 **4**。
-`D::Minus2`，是指張量的倒數第二個維度，如 2x3x4 矩陣，`t.dim(D::Minus2)?` 取得倒數第二個維度大小 **3**。
-`D::Minus1` 在之後操作中，會經常使用到。
+## 四、取出張量的內容
 
-#### 利用既有張量，產生新維度張量 `t.reshape`
+要取出張量內容，首先需先知道張量的維度，再使用 `to_scalar` 或 `to_vecN` 取出張量內容。
 
-`reshape` 可以透過既有的張量，產生一個指定維度的新張量，新張量的總元素數量必須與舊張量相同。如 **24** 個元素的向量，可以產生新的 **2x3x4** 矩陣。
-
-```rust
-// vector with 24 elements
-let t = Tensor::arange(0u32, 24u32, &Device::Cpu)?;
-// convert to 2x3x4 矩陣
-let t = t.reshape((2, 3, 4))?;
-```
-
-see [tensor_dim.rs](../../tests/tensor_dim.rs)
-
-### 取出張量內容 `t.to_scalar` and `t.to_vecX`
-
-要取出張量內容，首先需先知道張量的維度，再使用 `to_scalar` 或 `to_vecX` 取出張量內容。
-
-1. scalar: `t.to_scalar`
-1. vector: `t.to_vec1`
-1. 2維矩陣: `t.to_vec2`
-1. 3維矩陣: `t.to_vec3`
+1. 純量: `t.to_scalar`
+1. 向量: `t.to_vec1`
+1. 2D 張量: `t.to_vec2`
+1. 3D 張量: `t.to_vec3`
 
 在取出張量內容時，需留意張量的維度是否與取出的資料型別相符，否則會產生錯誤。
 
-see [tensor_get_values.rs](../../tests/tensor_get_values.rs)
+👉 範例程式：[tensor_get_values.rs](../../tests/tensor_get_values.rs)
 
-### 透過既有的張量，產生新型別張量 `t.to_dtype`
+## 五、透過既有的張量，產生新型別張量 `t.to_dtype`
 
 利用 `t.to_dtype` 可以透過既有的張量，產生新的資料型別張量，如從 `u32` 轉換成 `f32`。新的張量會與原來的張量有相同維度，並在相同裝置上。
 
-see [tensor_to_dtype.rs](../../tests/tensor_to_dtype.rs)
+👉 範例程式：[tensor_to_dtype.rs](../../tests/tensor_to_dtype.rs)
 
-## arithmetic
+## 六、張量四則運算 `t.add`, `t.sub`, `t.mul`, and `t.div`
 
-1. add
-1. sub
-1. mul
-1. div
+兩個張量四則運算，可以透過 `t.add`, `t.sub`, `t.mul`, and `t.div` 或直接使用 `+`, `-`, `*`, `/` 進行運算。
+⚠️ 注意兩個張量的維度和型別必須相同，不然會出錯。
 
-## broadcast op
+除法時，如果除數是 **0**，會得到 `NaN`，或者 `Inf` / `-Inf`。
 
-1. `t.broadcase_add`
+👉 範例程式：[tensor_arithmetic.rs](../../tests/tensor_arithmetic.rs)
 
-## sum, mean and keepdim
+## 七、矩陣乘法 `t.matmul`
 
-## max, min and keepdim
+遵守線性代數矩陣乘法規則，即第一個張量的最後一個維度大小必須與第二個張量的第一個維度大小相同。張量矩陣相乘，可以透過 `t.matmul` 進行。
 
-## argmax and argmin
+👉 範例程式：[tensor_matmul.rs](../../tests/tensor_matmul.rs)
 
-## stack and cat
+## 八、不同維度的張量四則運算 `t.broadcast_add`, `t.broadcast_sub`, `t.broadcast_mul`, and `t.broadcast_div`
 
-## transpose
+如果兩個張量的維度不同時，如要進行四則運算，就需要使用 `broadcast_xxx` 相關函式。由於目前 Candle 目前沒有提供相關說明，因此透過研究源碼，整理運算流程。
 
-## matmul
+### 1. 左、右運算元的張量維度是否相容 `broadcast_shape_binary_op`
 
-## index and contiguous
+在進行 broadcast 運算，需先確認兩個運算元的張量維度是否相容，透過研究 `Shape::broadcast_shape_binary_op`，整理相容維度的規則如下：
+
+1. 純量張量與任何張量相容。
+1. 從右到左比較維度大小，比對兩個張量的每層維度大小，如果兩者維度大小相同，則相容。
+1. 承上，如果倒序過程，遇到維度大小為 **1**，則相容。
+
+假設 `t1`, `t2` 是不同維度的張量，
+
+1. `t1` 為純量張量，則與 `t2` 相容。
+1. `t1` 是向量，如 `t2` 最後維度的大小與 `t1` 相同，則相容。比如：`t1` 是 **4** 個元素向量，如 `t2` 是 MxNx**4** 張量，則相容；如 `t2` 是 Nx**3** 張量，則不相容。
+1. `t1` 是 **1**x4 張量，如 `t2` 是 MxNx**4** 張量，則相容；如 `t2` 是 Nx**3** 張量，則不相容。
+1. `t1` 是 **3x4** 張量，如 `t2` 是 Mx**3x4** 張量，則相容，如 `t2` 是 Mx**3x3** 張量，或 Mx**2x4**，則不相容。
+
+### 2. 左、右運算元的張量維度調整成一致 broadcast_as
+
+在取得相容的維度後，透過 `broadcast_as` 函式，將兩個張量的維度調整成一致。
+
+### 3. 使用張量四則運算計算結果
+
+在源碼 **tensor.rs** 中，
+
+```rust
+broadcast_binary_op!(broadcast_add, add);
+broadcast_binary_op!(broadcast_mul, mul);
+broadcast_binary_op!(broadcast_sub, sub);
+broadcast_binary_op!(broadcast_div, div);
+```
+
+透過 `broadcast_binary_op!` 定義 `broadcast_xxx` 函式，使用對應的四則運算函式進行運算。
+
+👉 範例程式：[tensor_broadcast.rs](../../tests/tensor_broadcast.rs)
+
+## 九、不同維度的張量矩陣乘法 `broadcast_matmul`
+
+與其他的 `broadcast_xxx` 四則運算類似，必須先將兩個張量維度調整成相容後，再進行矩陣乘法。依源碼 `Shape::broadcast_shape_matmul` 規則，整理相容維度的規則如下：
+
+1. 兩個張量最後兩個維度大小，必須符合矩陣乘法的規則。
+1. 之後由右往左順序的維度大小，必須符合 broadcast 的規則。
+
+👉 範例程式：[tensor_broadcast_matmul.rs](../../tests/tensor_broadcast_matmul.rs)
+
+## 十、復盤
+
+1. 建立張量的方法
+   * Shape: 維度設定與操作
+   * DType: 指定型別與 `to_dtype` 轉換。
+   * `reshape` 產生新維度張量。
+1. 張量四則運算與矩陣乘法
+   * `add`, `sub`, `mul`, `div`
+   * `+`, `-`, `*`, `/`
+1. 不同維度張量四則運算與矩陣乘法
+   * 張量維度相容性判斷
+   * 在不同維度下，矩陣乘法的維度相容性判斷。
+
+這就是如何在 Candle 中操作張量的簡單教學！希望對你有幫助！ 🎉
+
+## 十一、下一步
+
+前往 [tensor-adv-op](../tensor-adv-op/README.md) 了解更多張量操作。

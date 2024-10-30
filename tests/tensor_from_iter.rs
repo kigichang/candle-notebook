@@ -1,8 +1,10 @@
 use candle_core::{Device, Result, Tensor};
 
+/// 使用 Tensor::from_iter 建立向量
 #[test]
 fn from_iter() -> Result<()> {
-    // vector only
+    // from_iter 只能產生向量
+
     let t = Tensor::from_iter(0..4u32, &Device::Cpu)?;
     assert_eq!(t.to_vec1::<u32>()?, vec![0, 1, 2, 3]);
 

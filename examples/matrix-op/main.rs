@@ -86,10 +86,12 @@ impl App {
             terminal.draw(|frame| self.draw(frame))?;
             let timeout = tick_rate.saturating_sub(last_tick.elapsed());
             if event::poll(timeout)? {
+                // 依使用者輸入調整 dx, dy, d_theta
                 if let Event::Key(key) = event::read()? {
                     match key.code {
                         KeyCode::Char('q') | KeyCode::Esc => break Ok(()),
                         KeyCode::Up | KeyCode::Char('k') => {
+                            // 上移
                             if self.dy <= 0.0 {
                                 self.dy = self.args.displacement;
                             } else {
@@ -97,6 +99,7 @@ impl App {
                             }
                         }
                         KeyCode::Down | KeyCode::Char('j') => {
+                            // 下移
                             if self.dy >= 0.0 {
                                 self.dy = -self.args.displacement;
                             } else {
@@ -104,6 +107,7 @@ impl App {
                             }
                         }
                         KeyCode::Left | KeyCode::Char('h') => {
+                            // 左移
                             if self.dx >= 0.0 {
                                 self.dx = -self.args.displacement;
                             } else {
@@ -111,6 +115,7 @@ impl App {
                             }
                         }
                         KeyCode::Right | KeyCode::Char('l') => {
+                            // 右移
                             if self.dx <= 0.0 {
                                 self.dx = self.args.displacement;
                             } else {
@@ -118,6 +123,7 @@ impl App {
                             }
                         }
                         KeyCode::Char('a') => {
+                            // 逆時針旋轉
                             if self.d_theta <= 0.0 {
                                 self.d_theta = self.args.rotation;
                             } else {
@@ -125,6 +131,7 @@ impl App {
                             }
                         }
                         KeyCode::Char('s') => {
+                            // 順時針旋轉
                             if self.d_theta >= 0.0 {
                                 self.d_theta = -self.args.rotation;
                             } else {
@@ -137,7 +144,7 @@ impl App {
             }
 
             if last_tick.elapsed() >= tick_rate {
-                self.on_tick()?;
+                self.on_tick()?; // 每次 tick 時的重新計算矩形的 4 個頂點
                 last_tick = Instant::now();
             }
         }

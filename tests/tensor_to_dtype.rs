@@ -1,4 +1,4 @@
-use candle_core::{DType, Device, Result, Tensor, WithDType, D};
+use candle_core::{DType, Device, Result, Tensor};
 
 // U8, U32, I64, BF16, F16, F32, F64
 

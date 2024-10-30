@@ -1,5 +1,6 @@
 use candle_core::{Device, Result, Tensor};
 
+/// 從等差數列建立向量
 #[test]
 fn arange() -> Result<()> {
     // vector only
