@@ -13,17 +13,17 @@ fn from_vec() -> Result<()> {
     assert_eq!(t.dims1()?, 4);
     assert_eq!(t.to_vec1::<f32>()?, vec![1.0, 2.0, 3.0, 4.0]);
 
-    // &[N] Shape
+    // 使用 &[N] Shape 產生向量
     let z = Tensor::from_vec(vec![1.0f32, 2., 3., 4.], &[4], &Device::Cpu)?;
     assert_eq!(z.dims(), t.dims());
     assert_eq!(z.to_vec1::<f32>()?, t.to_vec1::<f32>()?);
 
-    // (N,) Shape
+    // 使用 (N,) Shape 產生向量
     let z = Tensor::from_vec(vec![1.0f32, 2., 3., 4.], (4,), &Device::Cpu)?;
     assert_eq!(z.dims(), t.dims());
     assert_eq!(z.to_vec1::<f32>()?, t.to_vec1::<f32>()?);
 
-    // vec![N] Shape
+    // 使用 vec![N] Shape 產生向量
     let z = Tensor::from_vec(vec![1.0f32, 2., 3., 4.], vec![4], &Device::Cpu)?;
     assert_eq!(z.dims(), t.dims());
     assert_eq!(z.to_vec1::<f32>()?, t.to_vec1::<f32>()?);

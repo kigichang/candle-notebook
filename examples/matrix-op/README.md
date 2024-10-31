@@ -235,4 +235,4 @@ let points = points.broadcast_add(&centroid)?;
 
 ## Next
 
-前往 [tensor-op](../tensor-op/README.md) 了解更多張量操作。
+前往 [tensor-op](../tensor-op/README.md) 了解張量 (Tensor) 的建立與基本運算。
