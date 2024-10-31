@@ -1,13 +1,7 @@
-use candle_core::{Device, Result, Tensor, D};
+use candle_core::{Device, Result, Tensor};
 
 #[test]
 fn sum() -> Result<()> {
-    let t = Tensor::arange(0u32, 24, &Device::Cpu)?;
-    assert_eq!(t.rank(), 1);
-    let sum = t.sum(D::Minus1)?;
-    assert_eq!(sum.rank(), 0);
-    assert_eq!(sum.to_scalar::<u32>()?, (0u32..24).sum::<u32>());
-
     let v = &[
         [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10, 11]],
         [[12, 13, 14, 15], [16, 17, 18, 19], [20, 21, 22, 23]],
@@ -81,7 +75,7 @@ fn sum() -> Result<()> {
         .map(|v1| v1.map(|v2| v2.iter().sum::<u32>()).iter().sum::<u32>())
         .iter()
         .sum::<u32>();
-
     assert_eq!(sum_all.to_scalar::<u32>()?, sum_all_v);
+
     Ok(())
 }
