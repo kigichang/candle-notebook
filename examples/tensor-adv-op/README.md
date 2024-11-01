@@ -1,16 +1,16 @@
 # Tensor Advanced Operations
 
-## transpose
+## transpose ✅
 
-## sum, mean and keepdim
+## sum, mean and keepdim ✅
 
-## max, min and keepdim
+## max, min and keepdim ✅
 
-## argmax and argmin
+## argmax and argmin ✅
 
 ## stack and cat
 
-## squeeze and unsqueeze
+## squeeze and unsqueeze ✅
 
 ## gather
 
