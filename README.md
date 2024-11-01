@@ -2,7 +2,7 @@
 
 [Huggingface Candle](https://github.com/huggingface/candle) 是 Huggingface 官方用 [Rust](https://www.rust-lang.org/zh-TW/) 開發的 Machine Learning (ML) 框架。跟另一個知名的 Rust ML 框架 [tch-rs](https://github.com/LaurentMazare/tch-rs) 不一樣，Candle 完全用 Rust 寫成，而 tch-rs 是用 Rust 封裝 libtorch。現在 Huggingface 也找了 tch-rs 的開發者 [Laurent Mazare](https://github.com/LaurentMazare) 一起維護 Candle。
 
-因為 [Candle 的官方文件](https://huggingface.github.io/candle/index.html) 還不完整，我主要是透過 [examples](https://github.com/huggingface/candle/tree/main/candle-examples) 和一些 Pytorch 書籍的範例，來學習怎麼用 Candle。我甚至成功把公司內部的一個 Pytorch 專案移植到 Candle 上了。這些筆記大多透過程式碼來說明怎麼使用 Candle。
+因為 [Candle 的官方文件](https://huggingface.github.io/candle/index.html) 還不完整，我主要是透過 [examples](https://github.com/huggingface/candle/tree/main/candle-examples) 和一些 Pytorch 書籍的範例，來學習怎麼用 Candle。我已經成功把公司內部的一個 Pytorch 專案移植到 Candle 上了。這些筆記大多透過程式碼來說明怎麼使用 Candle。
 
 由於 Candle 還在開發中，我也會隨著它的更新，持續調整筆記內容。
 
