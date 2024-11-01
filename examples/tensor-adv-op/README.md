@@ -10,6 +10,8 @@
 
 ## stack and cat
 
+## squeeze and unsqueeze
+
 ## gather
 
 ## index and contiguous

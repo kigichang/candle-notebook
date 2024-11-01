@@ -10,14 +10,15 @@ candle-core = "0.7.2"
 candle-nn = "0.7.2"
 half = "2.4.1"
 intel-mkl-src = { version = "0.8.1", optional = true }
-serde = { version = "1.0.211", features = ["derive"] }
+serde = { version = "1.0.214", features = ["derive"] }
 
 [dev-dependencies]
-anyhow = "1.0.90"
+anyhow = "1.0.92"
 crossterm = "0.28.1"
 ratatui = "0.29.0"
 color-eyre = "0.6.3"
 clap = { version = "4.5.20", features = ["derive"] }
+
 
 [features]
 default = []
