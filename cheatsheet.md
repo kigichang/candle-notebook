@@ -1,19 +1,50 @@
 # CheatSheet
 
-|            | Using PyTorch                            | Using Candle                                                     |
-|------------|------------------------------------------|------------------------------------------------------------------|
-| Creation   | `torch.Tensor([[1, 2], [3, 4]])`         | `Tensor::new(&[[1f32, 2.], [3., 4.]], &Device::Cpu)?`            |
-| Creation   | -                                        | `Tensor::from_vec()?` |
-| Creation   | -                                        | `Tensor::from_iter()?` |
-| Creation   | `torch.zeros((2, 2))`                    | `Tensor::zeros((2, 2), DType::F32, &Device::Cpu)?`               |
-| Transpose  | `tensor.t()`                             | `tensor.t()?`                                                    |
-| Indexing   | `tensor[:, :4]`                          | `tensor.i((.., ..4))?`                                           |
-| Operations | `tensor.view((2, 2))`                    | `tensor.reshape((2, 2))?`                                        |
-| Operations | `a.matmul(b)`                            | `a.matmul(&b)?`                                                  |
-| Arithmetic | `a + b`                                  | `&a + &b`                                                        |
-| Arithmetic | -                                  | `tensor.mean`                                                        |
-| Arithmetic | -                                  | `tensor.sum`                                                        |
-| Device     | `tensor.to(device="cuda")`               | `tensor.to_device(&Device::new_cuda(0)?)?`                            |
-| Dtype      | `tensor.to(dtype=torch.float16)`         | `tensor.to_dtype(&DType::F16)?`                                  |
-| Saving     | `torch.save({"A": A}, "model.bin")`      | `candle::safetensors::save(&HashMap::from([("A", A)]), "model.safetensors")?` |
-| Loading    | `weights = torch.load("model.bin")`      | `candle::safetensors::load("model.safetensors", &device)`        |
+## 型別對應
+
+| DType | 對應 Rust 型別 |
+|:-----:| ------------- |
+| U8    | u8            |
+| U32   | u32           |
+| I64   | i64           |
+| BF16  | half::bf16    |
+| F16   | half::f16     |
+| F32   | f32           |
+| F64   | f64           |
+
+## Functions
+
+|                |  Candle                                                                  | 說明 |
+|:--------------:|--------------------------------------------------------------------------|-----|
+| **Creation**   | [`Tensor::new`](tests/tensor_new.rs)                                     | 由 `NdArray` 建立新張量。|
+|                | [`Tensor::from_vec`](tests/tensor_from_vec.rs)                           | 透過 Rust `Vec` 建立張量。|
+|                | [`Tensor::from_slice`](tests/tensor_from_slice.rs)                       | 透過 Slice 建立張量。|
+|                | [`Tensor::from_iter`](tests/tensor_from_iter.rs)                         | 透過 Iterator 建立張量。|
+|                | [`Tensor::arange` and `Tensor::arange_step`](tests/tensor_from_iter.rs)  | 建立等差數列張量。|
+|                | [`Tensor::zeros` and `t.zeros_like`](tests/tensor_zeros.rs)              | 全是為 0 的張量。|
+|                | [`Tensor::ones` and `t.ones_like`](tests/tensor_ones.rs)                 | 全是為 1 的張量。|
+|                | [`Tensor::full`](tests/tensor_full.rs)                                   | 全是指定值的張量。|
+|                | [`Tensor::rand` and `t.rand_like`](tests/tensor_rand.rs)                 | 隨機張量。|
+|                | [`Tensor::randn` and `t.randn_like`](tests/tensor_randn.rs)              | 隨機常態分佈張量。|
+| **Dimension**  | [`t.rank`](tests/tensor_dim.rs)                                          | 取得張量的維度，如: 3D 張量回傳 **3**。|
+|                | [`t.dims` and `t.dimsN`](tests/tensor_dim.rs)                            | 取得張量每個維度大小。|
+|                | [`t.dim(index)` and `D::Minus`](tests/tensor_dim.rs)                     | 取得指定維度大小。|
+|                | [`t.reshape`](tests/tensor_dim.rs)                                       | 由既有張量，產生新維度張量。|
+| **Get Valus**  | [`t.to_scalar` and `t.to_vecN`](tests/tensor_get_values.rs)              | 取得張量的內容。|
+| **Dtype**      | [`tensor.to_dtype()`](tests/tensor_to_dtype.rs)                          | 由既有張量，產生新資料型別張量。|
+| **Arithmetic** | [`&a + &b` or `a.add(&b)`](tests/tensor_arithmetic.rs)                   | 同張量維度四則運算。|
+| **Broadcast**  | [`a.broadcast_xxx(&b)`](tests/tensor_broadcast.rs)                       | 不同張量維度四則運算。|
+|                | [`a.broadcast_matmul(&b)`](tests/tensor_broadcast_matmul.rs)             | 不同張量維度矩陣乘法。|
+| **Operations** | [`a.matmul(&b)?`](tests/tensor_matmul.rs)                                | 張量矩陣乘法。 |
+|                | [`t.sum`](tests/tensor_sum.rs)                                           | 計算張量某個維度的總和或整個張量總和。 |
+|                | [`t.mean`](tests/tensor_mean.rs)                                         | 計算張量某個維度的平均或整個張量平均。 |
+|                | [`t.max`](tests/tensor_max.rs)                                           | 取得張量某個維度的最大值。 |
+|                | [`t.min`](tests/tensor_min.rs)                                           | 計算張量某個維度的最小值。 |
+|                | [`t.squeeze` and `t.unsqueeze`](tests/tensor_squeeze.rs)                 | 張量升維與降維。 |
+| Transpose  | `tensor.t()?` and `t.transpose`                                              | - |
+| Indexing   | `tensor.i((.., ..4))?`                                                       | - |
+|            | `t.argmax`                                                       | - |
+|            | `t.argmin`                                                       | - |
+| Device     | `tensor.to_device(&Device::new_cuda(0)?)?`                                   | - |
+| Saving     | `candle::safetensors::save(&HashMap::from([("A", A)]), "model.safetensors")?`| - |
+| Loading    | `candle::safetensors::load("model.safetensors", &device)`                    | - |
