@@ -8,6 +8,10 @@
 
 ## argmax and argmin ✅
 
+## maximum and minimum
+## broadcat_max and broadcast_min
+
+
 ## stack and cat
 
 ## squeeze and unsqueeze ✅

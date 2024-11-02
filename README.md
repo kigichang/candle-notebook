@@ -16,6 +16,6 @@
 1. *[rnn](examples/rnn/README.md): 以 LSTM 為例，講解如何擴充 Candle 的功能。
 1. *[bert-base-chinese](examples/bert-base-chinese/README.md): 使用 [google-bert/bert-base-chinese](https://huggingface.co/google-bert/bert-base-chinese)，展示如何使用 Huggingface 的預訓練模型。
 1. *[platform](examples/platform/README.md): 在 Apple Silicon、Intel CPU 和 Nvidia GPU 上使用 Candle。
-1. *[CheatSheet](Cheatsheet.md) 快速查詢指南。
+1. *[CheatSheet](cheatsheet.md) 快速查詢指南。
 
 這份筆記是我邊學邊記錄的結果，未來會根據實際使用經驗和 Candle 的更新繼續補充。希望能幫助到其他對 Candle 有興趣的朋友！
