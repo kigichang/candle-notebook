@@ -1,37 +1,5 @@
 use candle_core::{Device, Result, Tensor};
 
-/// 使用 Tensor::squeeze 降維。
-/// 被消滅維度的大小必須是 1，
-/// 如果不是 1 則回傳原張量。
-#[test]
-fn squeeze() -> Result<()> {
-    let t = Tensor::new(&[[1.0f32, 2., 3.]], &Device::Cpu)?;
-    assert_eq!(t.dims(), vec![1, 3]);
-    let s = t.squeeze(0)?;
-    assert_eq!(s.dims(), vec![3]);
-    let s = t.squeeze(1)?;
-    assert_eq!(t.to_vec2::<f32>()?, s.to_vec2::<f32>()?);
-
-    let t = Tensor::rand(-1.0f32, 1.0, (3, 4, 5), &Device::Cpu)?;
-
-    let max0 = t.max(0)?;
-    let max0_keepdim = t.max_keepdim(0)?.squeeze(0)?; // [1, 4, 5] -> [4, 5]
-    assert_eq!(max0.dims(), vec![4, 5]);
-    assert_eq!(max0_keepdim.dims(), vec![4, 5]);
-
-    let max1 = t.max(1)?;
-    let max1_keepdim = t.max_keepdim(1)?.squeeze(1)?; // [3, 1, 5] -> [3, 5]
-    assert_eq!(max1.dims(), vec![3, 5]);
-    assert_eq!(max1_keepdim.dims(), vec![3, 5]);
-
-    let max2 = t.max(2)?;
-    let max2_keepdim = t.max_keepdim(2)?.squeeze(2)?; // [3, 4, 1] -> [3, 4]
-    assert_eq!(max2.dims(), vec![3, 4]);
-    assert_eq!(max2_keepdim.dims(), vec![3, 4]);
-
-    Ok(())
-}
-
 /// 使用 Tensor::unsqueeze 升維。
 /// 張量的維度會增加一維。
 /// 指定升維的維度大小會是 1。
@@ -77,6 +45,38 @@ fn unsqueeze() -> Result<()> {
     let max1_keepdim = t.max_keepdim(1)?;
     let max1 = t.max(1)?.unsqueeze(1)?;
     assert_eq!(max1.dims(), max1_keepdim.dims());
+
+    Ok(())
+}
+
+/// 使用 Tensor::squeeze 降維。
+/// 被消滅維度的大小必須是 1，
+/// 如果不是 1 則回傳與原張量相同的張量。
+#[test]
+fn squeeze() -> Result<()> {
+    let t = Tensor::new(&[[1.0f32, 2., 3.]], &Device::Cpu)?;
+    assert_eq!(t.dims(), vec![1, 3]);
+    let s = t.squeeze(0)?;
+    assert_eq!(s.dims(), vec![3]);
+    let s = t.squeeze(1)?;
+    assert_eq!(t.to_vec2::<f32>()?, s.to_vec2::<f32>()?);
+
+    let t = Tensor::rand(-1.0f32, 1.0, (3, 4, 5), &Device::Cpu)?;
+
+    let max0 = t.max(0)?;
+    let max0_keepdim = t.max_keepdim(0)?.squeeze(0)?; // [1, 4, 5] -> [4, 5]
+    assert_eq!(max0.dims(), vec![4, 5]);
+    assert_eq!(max0_keepdim.dims(), vec![4, 5]);
+
+    let max1 = t.max(1)?;
+    let max1_keepdim = t.max_keepdim(1)?.squeeze(1)?; // [3, 1, 5] -> [3, 5]
+    assert_eq!(max1.dims(), vec![3, 5]);
+    assert_eq!(max1_keepdim.dims(), vec![3, 5]);
+
+    let max2 = t.max(2)?;
+    let max2_keepdim = t.max_keepdim(2)?.squeeze(2)?; // [3, 4, 1] -> [3, 4]
+    assert_eq!(max2.dims(), vec![3, 4]);
+    assert_eq!(max2_keepdim.dims(), vec![3, 4]);
 
     Ok(())
 }
