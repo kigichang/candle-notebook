@@ -27,20 +27,26 @@
 |                | [`Tensor::rand` and `t.rand_like`](tests/tensor_rand.rs)                 | 隨機張量。|
 |                | [`Tensor::randn` and `t.randn_like`](tests/tensor_randn.rs)              | 隨機常態分佈張量。|
 | **Dimension**  | [`t.rank`](tests/tensor_dim.rs)                                          | 取得張量的維度，如: 3D 張量回傳 **3**。|
+|                | [`t.shape`](tests/tensor_dim.rs)                                         | 取得張量的形狀，張量各維度的大小資訊，都是由此提供。|
 |                | [`t.dims` and `t.dimsN`](tests/tensor_dim.rs)                            | 取得張量每個維度大小。|
 |                | [`t.dim(index)` and `D::Minus`](tests/tensor_dim.rs)                     | 取得指定維度大小。|
 |                | [`t.reshape`](tests/tensor_dim.rs)                                       | 由既有張量，產生新維度張量。|
 | **Get Valus**  | [`t.to_scalar` and `t.to_vecN`](tests/tensor_get_values.rs)              | 取得張量的內容。|
 | **Dtype**      | [`tensor.to_dtype()`](tests/tensor_to_dtype.rs)                          | 由既有張量，產生新資料型別張量。|
 | **Arithmetic** | [`&a + &b` or `a.add(&b)`](tests/tensor_arithmetic.rs)                   | 同張量維度四則運算。|
-| **Broadcast**  | [`a.broadcast_xxx(&b)`](tests/tensor_broadcast.rs)                       | 不同張量維度四則運算。|
-|                | [`a.broadcast_matmul(&b)`](tests/tensor_broadcast_matmul.rs)             | 不同張量維度矩陣乘法。|
+| **Broadcast**  | [`a.broadcast_xxx(&b)`](tests/tensor_broadcast.rs)                       | 不同張量形狀四則運算。|
+|                | [`a.broadcast_matmul(&b)`](tests/tensor_broadcast_matmul.rs)             | 不同張量形狀矩陣乘法。|
+|                | [`t.broadcast_maximum`](tests/tensor_compare.rs)                         | 不同形狀張量比較大小，取最大值。 |
+|                | [`t.broadcast_minimum`](tests/tensor_compare.rs)                         | 不同形狀張量比較大小，取最小值。 |
 | **Operations** | [`a.matmul(&b)?`](tests/tensor_matmul.rs)                                | 張量矩陣乘法。 |
+|                | [`t.squeeze`](tests/tensor_squeeze.rs)                                   | 張量降維。 |
+|                | [`t.unsqueeze`](tests/tensor_squeeze.rs)                                 | 張量升維。 |
 |                | [`t.sum`](tests/tensor_sum.rs)                                           | 計算張量某個維度的總和或整個張量總和。 |
 |                | [`t.mean`](tests/tensor_mean.rs)                                         | 計算張量某個維度的平均或整個張量平均。 |
 |                | [`t.max`](tests/tensor_max.rs)                                           | 取得張量某個維度的最大值。 |
 |                | [`t.min`](tests/tensor_min.rs)                                           | 計算張量某個維度的最小值。 |
-|                | [`t.squeeze` and `t.unsqueeze`](tests/tensor_squeeze.rs)                 | 張量升維與降維。 |
+|                | [`t.maximum`](tests/tensor_maximum.rs)                                   | 兩個張量比較大小，取最大值。 |
+|                | [`t.minimum`](tests/tensor_minimum.rs)                                   | 兩個張量比較大小，取最小值。 |
 | Transpose  | `tensor.t()?` and `t.transpose`                                              | - |
 | Indexing   | `tensor.i((.., ..4))?`                                                       | - |
 |            | `t.argmax`                                                       | - |

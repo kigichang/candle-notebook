@@ -1,7 +1,7 @@
 use candle_core::{Device, Result, Tensor};
 
 /// 使用 Tensor::stack 建立張量。
-/// 操作時，每個張量的維度必須相同，且每個維度的大小必須相同。
+/// 操作時，每個張量的維度形狀必須相同。
 /// 由源碼來看，Tensor::stack 等同每個張量先做 t.unsqueeze，然後再做 Tensor::cat
 /// 結果的張量維度比輸入張量多一維。
 
@@ -44,7 +44,6 @@ fn stack_vector() -> Result<()> {
         1,
     )?;
     assert_eq!(t.to_vec2::<u32>()?, v.to_vec2::<u32>()?);
-
     let t = Tensor::stack(&[&t1, &t2, &t3], 2);
     assert_eq!(t.is_err(), true);
 

@@ -26,7 +26,7 @@ fn sum() -> Result<()> {
     assert_eq!(sum0.to_vec2::<u32>()?, v0.to_vec2::<u32>()?);
     let sum0_keepdim = t.sum_keepdim(0)?;
     assert_eq!(sum0_keepdim.dims(), vec![1, 3, 4]);
-    let v0 = v0.reshape((1, 3, 4))?;
+    let v0 = v0.unsqueeze(0)?; // (3, 4) -> (1, 3, 4)
     assert_eq!(sum0_keepdim.to_vec3::<u32>()?, v0.to_vec3::<u32>()?);
 
     let sum1 = t.sum(1)?;
@@ -46,7 +46,7 @@ fn sum() -> Result<()> {
     assert_eq!(sum1.to_vec2::<u32>()?, v1.to_vec2::<u32>()?);
     let sum1_keepdim = t.sum_keepdim(1)?;
     assert_eq!(sum1_keepdim.dims(), vec![2, 1, 4]);
-    let v1 = v1.reshape((2, 1, 4))?;
+    let v1 = v1.unsqueeze(1)?; // (2, 4) -> (2, 1, 4)
     assert_eq!(sum1_keepdim.to_vec3::<u32>()?, v1.to_vec3::<u32>()?);
 
     let sum2 = t.sum(2)?;
@@ -66,7 +66,7 @@ fn sum() -> Result<()> {
     assert_eq!(sum2.to_vec2::<u32>()?, v2.to_vec2::<u32>()?);
     let sum2_keepdim = t.sum_keepdim(2)?;
     assert_eq!(sum2_keepdim.dims(), vec![2, 3, 1]);
-    let v2 = v2.reshape((2, 3, 1))?;
+    let v2 = v2.unsqueeze(2)?; // (2, 3) -> (2, 3, 1)
     assert_eq!(sum2_keepdim.to_vec3::<u32>()?, v2.to_vec3::<u32>()?);
 
     let sum_all = t.sum_all()?;

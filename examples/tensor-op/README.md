@@ -33,11 +33,12 @@ Candle 張量支援的資料型別如下：
 
 `Tensor::from_vec()` 接收一個 `Vec` 並生成指定維度的張量。
 
-* 第二個參數要能轉換成 `Shape`，可以是：
-  * 空元組 ()：產生純量。
-  * `usize`：產生向量
-  * 數組 (Tuple)：生成 1～6 維的張量。
-  * `Vec<usize>`：同樣可生成 1～6 維張量。
+第二個參數要能轉換成 `Shape`，`Shape` 是指張量的形狀，如：**2x3x4** 的張量，則 `Shape` 為 `&[2, 3, 4]`。可以轉換成 `Shape` 的型別有：
+
+* 空元組 ()：產生純量。
+* `usize`：產生向量
+* 數組 (Tuple)：生成 1～6 維的張量。
+* `Vec<usize>`：同樣可生成 1～6 維張量。
 
 👉 範例程式：[tensor_from_vec.rs](../../tests/tensor_from_vec.rs)
 
@@ -97,7 +98,7 @@ Candle 張量支援的資料型別如下：
 
 ## 三、張量的維度操作
 
-在 Candle 中，張量的維度操作主要透過 `Shape` 類別提供的方法進行，可以使用 `t.shape()` 取得張量的維度資訊。以下函式，都是由 `Shape` 類別提供的方法。
+在 Candle 中，張量的維度操作主要透過 `Shape` 類別提供的方法進行，可以使用 `t.shape()` 取得張量形狀。以下函式，都是由 `Shape` 類別提供的方法。
 
 ### 1. 取得張量維度 `t.rank`
 
@@ -122,9 +123,9 @@ Candle 張量支援的資料型別如下：
   * `D::Minus2`，是指張量的倒數第二個維度，如 2x3x4 張量，`t.dim(D::Minus2)?` 取得倒數第二個維度大小 **3**。
   * `D::Minus1` 在之後操作中，會經常使用到。
 
-### 3. 由既有張量產生新維度張量 `t.reshape`
+### 3. 由既有張量產生新形狀張量 `t.reshape`
 
-`t.reshape`: 利用既有張量，產生新維度張量。新張量的元素數量必須與舊張量相同。如 **24** 個元素的向量，可以產生新的 **2x3x4** 3D 張量。
+`t.reshape`: 利用既有張量，產生新形狀張量。新張量的元素數量必須與舊張量相同。如 **24** 個元素的向量，可以產生新的 **2x3x4** 3D 張量。
 
 ```rust
 // vector with 24 elements
@@ -169,13 +170,13 @@ let t = t.reshape((2, 3, 4))?;
 
 👉 範例程式：[tensor_matmul.rs](../../tests/tensor_matmul.rs)
 
-## 八、不同維度的張量四則運算 `t.broadcast_add`, `t.broadcast_sub`, `t.broadcast_mul`, and `t.broadcast_div`
+## 八、不同形狀的張量四則運算 `t.broadcast_add`, `t.broadcast_sub`, `t.broadcast_mul`, and `t.broadcast_div`
 
-如果兩個張量的維度不同時，如要進行四則運算，就需要使用 `broadcast_xxx` 相關函式。由於目前 Candle 目前沒有提供相關說明，因此透過研究源碼，整理運算流程。
+如果兩個張量的形狀不同時，如要進行四則運算，就需要使用 `broadcast_xxx` 相關函式。由於目前 Candle 目前沒有提供相關說明，因此透過研究源碼，整理運算流程。
 
-### 1. 左、右運算元的張量維度是否相容 `Shape::broadcast_shape_binary_op`
+### 1. 左、右運算元的張量形狀是否相容 `Shape::broadcast_shape_binary_op`
 
-在進行 broadcast 運算，需先確認兩個運算元的張量維度是否相容，透過研究 `Shape::broadcast_shape_binary_op`，整理維度相容的規則如下：
+在進行 broadcast 運算，需先確認兩個運算元的張量形狀是否相容，透過研究 `Shape::broadcast_shape_binary_op`，整理維度相容的規則如下：
 
 1. 純量張量與任何張量相容。
 1. 從右到左比較維度大小，比對兩個張量的每層維度大小，如果兩者維度大小相同，則相容。
@@ -188,9 +189,9 @@ let t = t.reshape((2, 3, 4))?;
 1. `t1` 是 **1**x4 張量，如 `t2` 是 MxNx**4** 張量，則相容；如 `t2` 是 Nx**3** 張量，則不相容。
 1. `t1` 是 **3x4** 張量，如 `t2` 是 Mx**3x4** 張量，則相容，如 `t2` 是 Mx**3x3** 張量，或 Mx**2x4**，則不相容。
 
-### 2. 左、右運算元的張量維度調整成一致 `t.broadcast_as`
+### 2. 左、右運算元的張量形狀調整成一致 `t.broadcast_as`
 
-在取得相容的維度後，透過 `t.broadcast_as` 函式，將兩個張量的維度調整成一致。
+在取得相容的維度後，透過 `t.broadcast_as` 函式，將兩個張量的形狀調整成一致。
 
 ### 3. 使用張量四則運算計算結果
 
@@ -207,7 +208,7 @@ broadcast_binary_op!(broadcast_div, div);
 
 👉 範例程式：[tensor_broadcast.rs](../../tests/tensor_broadcast.rs)
 
-## 九、不同維度的張量矩陣乘法 `t.broadcast_matmul`
+## 九、不同形狀的張量矩陣乘法 `t.broadcast_matmul`
 
 與其他的 `broadcast_xxx` 四則運算類似，必須先將兩個張量維度調整成相容後，再進行矩陣乘法。依源碼 `Shape::broadcast_shape_matmul` 規則，整理維度相容的規則如下：
 
@@ -219,16 +220,16 @@ broadcast_binary_op!(broadcast_div, div);
 ## 十、復盤
 
 1. 建立張量的方法
-   * Shape: 維度設定與操作
+   * Shape: 維度形狀與操作
    * DType: 指定型別與 `to_dtype` 轉換。
-   * `reshape` 產生新維度張量。
+   * `reshape` 產生新形狀張量。
 1. 張量四則運算與矩陣乘法
    * `add`, `sub`, `mul`, `div`
    * `+`, `-`, `*`, `/`
    * `matmul`
-1. 不同維度張量四則運算與矩陣乘法
-   * 張量維度相容性判斷
-   * 在不同維度下，矩陣乘法的維度相容性判斷。
+1. 不同形狀張量四則運算與矩陣乘法
+   * 張量形狀相容性判斷
+   * 在不同形狀下，矩陣乘法的張量形狀相容性判斷。
    * `broadcast_add`, `broadcast_sub`, `broadcast_mul`, `broadcast_div`, `broadcast_matmul`
 
 這就是如何在 Candle 中操作張量的簡單教學！希望對你有幫助！ 🎉

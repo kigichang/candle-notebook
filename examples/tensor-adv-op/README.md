@@ -1,5 +1,7 @@
 # Tensor Advanced Operations
 
+## squeeze and unsqueeze ✅
+
 ## transpose ✅
 
 ## sum, mean and keepdim ✅
@@ -8,13 +10,11 @@
 
 ## argmax and argmin ✅
 
-## maximum and minimum
+## maximum and minimum ✅
 
-## broadcat_max and broadcast_min
+## broadcat_max and broadcast_min ✅
 
 ## stack and cat ✅
-
-## squeeze and unsqueeze ✅
 
 ## gather
 

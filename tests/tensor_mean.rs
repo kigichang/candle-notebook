@@ -29,7 +29,7 @@ fn mean() -> Result<()> {
     assert_eq!(mean0.to_vec2::<f32>()?, v0.to_vec2::<f32>()?);
     let mean0_keepdim = t.mean_keepdim(0)?;
     assert_eq!(mean0_keepdim.dims(), vec![1, 3, 4]);
-    let v0 = v0.reshape((1, 3, 4))?;
+    let v0 = v0.unsqueeze(0)?; // (3, 4) -> (1, 3, 4)
     assert_eq!(mean0_keepdim.to_vec3::<f32>()?, v0.to_vec3::<f32>()?);
 
     let mean1 = t.mean(1)?;
@@ -48,7 +48,7 @@ fn mean() -> Result<()> {
     assert_eq!(mean1.to_vec2::<f32>()?, v1.to_vec2::<f32>()?);
     let mean1_keepdim = t.mean_keepdim(1)?;
     assert_eq!(mean1_keepdim.dims(), vec![2, 1, 4]);
-    let v1 = v1.reshape((2, 1, 4))?;
+    let v1 = v1.unsqueeze(1)?; // (2, 4) -> (2, 1, 4)
     assert_eq!(mean1_keepdim.to_vec3::<f32>()?, v1.to_vec3::<f32>()?);
 
     let mean2 = t.mean(2)?;
@@ -67,7 +67,7 @@ fn mean() -> Result<()> {
     assert_eq!(mean2.to_vec2::<f32>()?, v2.to_vec2::<f32>()?);
     let mean2_keepdim = t.mean_keepdim(2)?;
     assert_eq!(mean2_keepdim.dims(), vec![2, 3, 1]);
-    let v2 = v2.reshape((2, 3, 1))?;
+    let v2 = v2.unsqueeze(2)?; // (2, 3) -> (2, 3, 1)
     assert_eq!(mean2_keepdim.to_vec3::<f32>()?, v2.to_vec3::<f32>()?);
 
     let mean_all = t.mean_all()?;
