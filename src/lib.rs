@@ -90,6 +90,11 @@ vec_n_op!(eq_vec2, eq_vec1, Vec<T>, Vec<u8>);
 // 用於比較兩個三維向量的每個元素是否相等，相等為 1，不相等為 0
 vec_n_op!(eq_vec3, eq_vec2, Vec<Vec<T>>, Vec<Vec<u8>>);
 
+cmp_op!(ne, !=, a, b, 1, 0, u8);
+vec_n_op!(ne_vec1, ne, T, u8);
+vec_n_op!(ne_vec2, ne_vec1, Vec<T>, Vec<u8>);
+vec_n_op!(ne_vec3, ne_vec2, Vec<Vec<T>>, Vec<Vec<u8>>);
+
 cmp_op!(lt, <, a, b, 1, 0, u8);
 vec_n_op!(lt_vec1, lt, T, u8);
 vec_n_op!(lt_vec2, lt_vec1, Vec<T>, Vec<u8>);
