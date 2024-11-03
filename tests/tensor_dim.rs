@@ -1,4 +1,4 @@
-use candle_core::{DType, Device, Result, Tensor, D};
+use candle_core::{DType, Device, Result, Shape, Tensor, D};
 
 /// 取得張量的維度
 #[test]
@@ -6,18 +6,26 @@ fn rank() -> Result<()> {
     // 純量
     let t = Tensor::ones((), DType::F32, &Device::Cpu)?;
     assert_eq!(t.rank(), 0);
+    assert_eq!(t.shape(), &Shape::from(()));
+    assert_eq!(t.rank(), Shape::from(()).rank());
 
     // 向量
     let t = Tensor::ones(2, DType::F32, &Device::Cpu)?;
     assert_eq!(t.rank(), 1);
+    assert_eq!(t.shape(), &Shape::from(2));
+    assert_eq!(t.rank(), Shape::from(2).rank());
 
     // 2D 張量 (3x5)
     let t = Tensor::ones((3, 5), DType::F32, &Device::Cpu)?;
     assert_eq!(t.rank(), 2);
+    assert_eq!(t.shape(), &Shape::from((3, 5)));
+    assert_eq!(t.rank(), Shape::from((3, 5)).rank());
 
     // 3D 張量 (2x3x4)
     let t = Tensor::ones((2, 3, 4), DType::F32, &Device::Cpu)?;
     assert_eq!(t.rank(), 3);
+    assert_eq!(t.shape(), &Shape::from((2, 3, 4)));
+    assert_eq!(t.rank(), Shape::from((2, 3, 4)).rank());
 
     Ok(())
 }
