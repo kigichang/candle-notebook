@@ -36,8 +36,14 @@
 | **Arithmetic** | [`&a + &b` or `a.add(&b)`](tests/tensor_arithmetic.rs)                   | 同張量維度四則運算。|
 | **Broadcast**  | [`a.broadcast_xxx(&b)`](tests/tensor_broadcast.rs)                       | 不同張量形狀四則運算。|
 |                | [`a.broadcast_matmul(&b)`](tests/tensor_broadcast_matmul.rs)             | 不同張量形狀矩陣乘法。|
-|                | [`t.broadcast_maximum`](tests/tensor_compare.rs)                         | 不同形狀張量比較大小，取最大值。 |
-|                | [`t.broadcast_minimum`](tests/tensor_compare.rs)                         | 不同形狀張量比較大小，取最小值。 |
+|                | [`t.broadcast_maximum`](tests/tensor_broadcast_max_and_min.rs)           | 不同形狀張量比較大小，取最大值。 |
+|                | [`t.broadcast_minimum`](tests/tensor_broadcast_max_and_min.rs)           | 不同形狀張量比較大小，取最小值。 |
+|                | [t.broadcast_eq](tests/tensor_broadcast_compare.rs)                      | 比較兩個不同形狀的張量內容是否相等。|
+|                | [t.broadcast_ne](tests/tensor_broadcast_compare.rs)                      | 比較兩個不同形狀的張量內容是否不相等。|
+|                | [a.broadcast_lt(&b)](tests/tensor_broadcast_compare.rs)                  | 比較兩個不同形狀的張量內容，a 的是否小於 b。|
+|                | [a.broadcast_le(&b)](tests/tensor_broadcast_compare.rs)                  | 比較兩個不同形狀的張量內容，a 的是否小於等於 b。|
+|                | [a.broadcast_gt(&b)](tests/tensor_broadcast_compare.rs)                  | 比較兩個不同形狀的張量內容，a 的是否大於 b。|
+|                | [a.broadcast_ge(&b)](tests/tensor_broadcast_compare.rs)                  | 比較兩個不同形狀的張量內容，a 的是否大於等於 b。|
 | **Operations** | [`a.matmul(&b)?`](tests/tensor_matmul.rs)                                | 張量矩陣乘法。 |
 |                | [`t.squeeze`](tests/tensor_squeeze.rs)                                   | 張量降維。 |
 |                | [`t.unsqueeze`](tests/tensor_squeeze.rs)                                 | 張量升維。 |
@@ -47,10 +53,16 @@
 |                | [`t.min`](tests/tensor_min.rs)                                           | 計算張量某個維度的最小值。 |
 |                | [`t.maximum`](tests/tensor_maximum.rs)                                   | 兩個張量比較大小，取最大值。 |
 |                | [`t.minimum`](tests/tensor_minimum.rs)                                   | 兩個張量比較大小，取最小值。 |
+|                | [t.eq](tests/tensor_broadcast_compare.rs)                                | 比較兩個量內容是否相等。|
+|                | [t.ne](tests/tensor_broadcast_compare.rs)                                | 比較兩個張量內容是否不相等。|
+|                | [a.lt(&b)](tests/tensor_broadcast_compare.rs)                            | 比較兩個張量內容，a 的是否小於 b。|
+|                | [a.le(&b)](tests/tensor_broadcast_compare.rs)                            | 比較兩個張量內容，a 的是否小於等於 b。|
+|                | [a.gt(&b)](tests/tensor_broadcast_compare.rs)                            | 比較兩個張量內容，a 的是否大於 b。|
+|                | [a.ge(&b)](tests/tensor_broadcast_compare.rs)                            | 比較兩個張量內容，a 的是否大於等於 b。|
 | Transpose  | `tensor.t()?` and `t.transpose`                                              | - |
 | Indexing   | `tensor.i((.., ..4))?`                                                       | - |
-|            | `t.argmax`                                                       | - |
-|            | `t.argmin`                                                       | - |
+|            | [`t.argmax`](tests/tensor_arg.rs)                                            | - |
+|            | [`t.argmin`](tests/tensor_arg.rs)                                            | - |
 | Device     | `tensor.to_device(&Device::new_cuda(0)?)?`                                   | - |
 | Saving     | `candle::safetensors::save(&HashMap::from([("A", A)]), "model.safetensors")?`| - |
 | Loading    | `candle::safetensors::load("model.safetensors", &device)`                    | - |

@@ -2,7 +2,7 @@ use candle_core::{DType, Device, Result, Tensor};
 use candle_notebook::*;
 use half::f16;
 
-/// 使用 Tensor::minimum 比較張量，比較兩個張量的每個元素，取最大值。
+/// 使用 Tensor::minimum 比較張量，比較兩個張量的每個元素，取最小值。
 /// 由源碼來看：
 /// 如果右運算元是純量(數值)，資料型別可以與左運算元張量不同。
 /// 如果右運算元是張量，則兩個張量形狀與型別必須相同。
