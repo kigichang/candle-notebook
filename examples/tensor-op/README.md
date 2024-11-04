@@ -236,4 +236,4 @@ broadcast_binary_op!(broadcast_div, div);
 
 ## 十一、下一步
 
-前往 [tensor-adv-op](../tensor-adv-op/README.md) 了解其他張量操作。
+前往 [tensor-oop-2](../tensor-op-2/README.md) 了解其他張量操作。
