@@ -228,10 +228,10 @@ let points = points.broadcast_add(&centroid)?;
 ## 復盤
 
 1. 用 `Tensor::new` 建立 Tensor。
-1. 用 `t.mean()` 計算平均值。
-1. 用 `t.broadcast_add()` 和 `t.broadcast_sub()` 做矩陣與向量運算。
-1. 用 `t.t()` 進行矩陣轉置。
-1. 用 `t.matmul()` 做矩陣乘法。
+1. 用 `tensor.mean()` 計算平均值。
+1. 用 `tensor.broadcast_add()` 和 `tensor.broadcast_sub()` 做矩陣與向量運算。
+1. 用 `tensor.t()` 進行矩陣轉置。
+1. 用 `tensor.matmul()` 做矩陣乘法。
 
 ## Next
 

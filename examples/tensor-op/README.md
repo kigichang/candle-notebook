@@ -66,13 +66,13 @@ Candle 張量支援的資料型別如下：
 ### 1. 全是為 0 的張量
 
 * `Tensor::zeros` 給定維度，資料型別與裝置，產生全為 **0** 的張量。`Tensor::zeros` 第二個參數是 `DType`，可以是：`U8, U32, I64, BF16, F16, F32, F64`。
-* `t.zeros_like` 從已知的張量 `t` 產生全為 **0** 的張量。並與原張量具有相同維度和裝置。
+* `tensor.zeros_like` 從已知的張量 `t` 產生全為 **0** 的張量。並與原張量具有相同維度和裝置。
 
 👉 範例程式：[tensor_zeros.rs](../../tests/tensor_zeros.rs)
 
 ### 2. 全是 1 的張量
 
-`Tensor::ones`，`t.ones_like` 與 `t.zeros`，`t.zeros_like` 類似，只是產生全為 **1** 張量。
+`Tensor::ones`，`tensor.ones_like` 與 `tensor.zeros`，`tensor.zeros_like` 類似，只是產生全為 **1** 張量。
 
 👉 範例程式：[tensor_ones.rs](../../tests/tensor_ones.rs)
 
@@ -85,47 +85,47 @@ Candle 張量支援的資料型別如下：
 ### 4. 隨機內容的張量
 
 * `Tensor::rand`: 生成在範圍 [lo, up) 內的隨機值。
-* `t.rand_like`: 基於既有張量 `t`，產生相同維度的隨機張量。
+* `tensor.rand_like`: 基於既有張量 `t`，產生相同維度的隨機張量。
 
 👉 範例程式：[tensor_rand.rs](../../tests/tensor_rand.rs)
 
 ### 5. 常態分佈的張量
 
 * `Tensor::randn`: 生成具有指定平均數與標準差的常態分佈張量。
-* `t.randn_like` 基於既有張量 `t` 產生相同維度的常態分佈張量。
+* `tensor.randn_like` 基於既有張量 `t` 產生相同維度的常態分佈張量。
 
 👉 範例程式：[tensor_randn.rs](../../tests/tensor_randn.rs)
 
 ## 三、張量的維度操作
 
-在 Candle 中，張量的維度操作主要透過 `Shape` 類別提供的方法進行，可以使用 `t.shape()` 取得張量形狀。以下函式，都是由 `Shape` 類別提供的方法。
+在 Candle 中，張量的維度操作主要透過 `Shape` 類別提供的方法進行，可以使用 `tensor.shape()` 取得張量形狀。以下函式，都是由 `Shape` 類別提供的方法。
 
-### 1. 取得張量維度 `t.rank`
+### 1. 取得張量維度 `tensor.rank`
 
-`t.rank()`：取得張量的維度數，回傳值會是：
+`tensor.rank()`：取得張量的維度數，回傳值會是：
 
 * **0**: 純量。
 * **1**: 向量。
 * **N > 1**: N 維張量。
 
-### 2. 取得各維度大小 `t.dims()`, `t.dimsN`, `t.dim(index)` and `D::Minus`
+### 2. 取得各維度大小 `tensor.dims()`, `tensor.dimsN`, `tensor.dim(index)` and `D::Minus`
 
-* `t.dims()`: 回傳每個維度的大小，例如 **2x3x4** 張量會回傳 `&[2, 3, 4]`。
-* `t.dimsN`: 如已知張量維度，可以利用 `t.dimsN` 取得所有維度的大小。如：
+* `tensor.dims()`: 回傳每個維度的大小，例如 **2x3x4** 張量會回傳 `&[2, 3, 4]`。
+* `tensor.dimsN`: 如已知張量維度，可以利用 `tensor.dimsN` 取得所有維度的大小。如：
 
     ```rust
     let (d0, d1, d2) = t.dims3()?;
     ```
 
-* `t.dim(index)`: 取得指定維度大小，像是 `t.dim(0)? 會回傳第一個維度的大小。
+* `tensor.dim(index)`: 取得指定維度大小，像是 `tensor.dim(0)? 會回傳第一個維度的大小。
 * `D::Minus`: 倒數第幾個維度
-  * `D::Minus1`，是指張量的最後一個維度，如 2x3x4 張量，`t.dim(D::Minus1)?` 取得最後一個維度大小 **4**。
-  * `D::Minus2`，是指張量的倒數第二個維度，如 2x3x4 張量，`t.dim(D::Minus2)?` 取得倒數第二個維度大小 **3**。
+  * `D::Minus1`，是指張量的最後一個維度，如 2x3x4 張量，`tensor.dim(D::Minus1)?` 取得最後一個維度大小 **4**。
+  * `D::Minus2`，是指張量的倒數第二個維度，如 2x3x4 張量，`tensor.dim(D::Minus2)?` 取得倒數第二個維度大小 **3**。
   * `D::Minus1` 在之後操作中，會經常使用到。
 
-### 3. 由既有張量產生新形狀張量 `t.reshape`
+### 3. 由既有張量產生新形狀張量 `tensor.reshape`
 
-`t.reshape`: 利用既有張量，產生新形狀張量。新張量的元素數量必須與舊張量相同。如 **24** 個元素的向量，可以產生新的 **2x3x4** 3D 張量。
+`tensor.reshape`: 利用既有張量，產生新形狀張量。新張量的元素數量必須與舊張量相同。如 **24** 個元素的向量，可以產生新的 **2x3x4** 3D 張量。
 
 ```rust
 // vector with 24 elements
@@ -138,39 +138,39 @@ let t = t.reshape((2, 3, 4))?;
 
 ## 四、取出張量的內容
 
-要取出張量內容，首先需先知道張量的維度，再使用 `t.to_scalar::<DataType>()` 或 `t.to_vecN::<DataType>()` 取出張量內容。
+要取出張量內容，首先需先知道張量的維度，再使用 `tensor.to_scalar::<DataType>()` 或 `tensor.to_vecN::<DataType>()` 取出張量內容。
 
-1. 純量取值: `t.to_scalar` 或 `t.to_vec0`。
-1. 向量取值: `t.to_vec1`。
-1. 2D 張量取值: `t.to_vec2`。
-1. 3D 張量取值: `t.to_vec3`。
+1. 純量取值: `tensor.to_scalar` 或 `tensor.to_vec0`。
+1. 向量取值: `tensor.to_vec1`。
+1. 2D 張量取值: `tensor.to_vec2`。
+1. 3D 張量取值: `tensor.to_vec3`。
 
 在取出張量內容時，需留意張量的維度是否與取出的資料型別相符，否則會產生錯誤。
 
 👉 範例程式：[tensor_get_values.rs](../../tests/tensor_get_values.rs)
 
-## 五、透過既有的張量，產生新型別張量 `t.to_dtype`
+## 五、透過既有的張量，產生新型別張量 `tensor.to_dtype`
 
-利用 `t.to_dtype` 可以透過既有的張量，產生新的資料型別張量，如從 `u32` 轉換成 `f32`。新的張量會與原來的張量有相同維度，並在相同裝置上。
+利用 `tensor.to_dtype` 可以透過既有的張量，產生新的資料型別張量，如從 `u32` 轉換成 `f32`。新的張量會與原來的張量有相同維度，並在相同裝置上。
 
 👉 範例程式：[tensor_to_dtype.rs](../../tests/tensor_to_dtype.rs)
 
-## 六、張量四則運算 `t.add`, `t.sub`, `t.mul`, and `t.div`
+## 六、張量四則運算 `tensor.add`, `tensor.sub`, `tensor.mul`, and `tensor.div`
 
-兩個張量四則運算，可以透過 `t.add`, `t.sub`, `t.mul`, and `t.div` 或直接使用 `+`, `-`, `*`, `/` 進行運算。
+兩個張量四則運算，可以透過 `tensor.add`, `tensor.sub`, `tensor.mul`, and `tensor.div` 或直接使用 `+`, `-`, `*`, `/` 進行運算。
 ⚠️ 注意：兩個張量的維度和型別必須相同，不然會出錯。
 
 除法時，如果除數是 **0**，會得到 `NaN`，或者 `Inf` / `-Inf`。
 
 👉 範例程式：[tensor_arithmetic.rs](../../tests/tensor_arithmetic.rs)
 
-## 七、矩陣乘法 `t.matmul`
+## 七、矩陣乘法 `tensor.matmul`
 
-遵守線性代數矩陣乘法規則，即第一個張量的最後一個維度大小必須與第二個張量的第一個維度大小相同。張量矩陣相乘，可以透過 `t.matmul` 進行。
+遵守線性代數矩陣乘法規則，即第一個張量的最後一個維度大小必須與第二個張量的第一個維度大小相同。張量矩陣相乘，可以透過 `tensor.matmul` 進行。
 
 👉 範例程式：[tensor_matmul.rs](../../tests/tensor_matmul.rs)
 
-## 八、不同形狀的張量四則運算 `t.broadcast_add`, `t.broadcast_sub`, `t.broadcast_mul`, and `t.broadcast_div`
+## 八、不同形狀的張量四則運算 `tensor.broadcast_add`, `tensor.broadcast_sub`, `tensor.broadcast_mul`, and `tensor.broadcast_div`
 
 如果兩個張量的形狀不同時，如要進行四則運算，就需要使用 `broadcast_xxx` 相關函式。由於目前 Candle 目前沒有提供相關說明，因此透過研究源碼，整理運算流程。
 
@@ -189,9 +189,9 @@ let t = t.reshape((2, 3, 4))?;
 1. `t1` 是 **1**x4 張量，如 `t2` 是 MxNx**4** 張量，則相容；如 `t2` 是 Nx**3** 張量，則不相容。
 1. `t1` 是 **3x4** 張量，如 `t2` 是 Mx**3x4** 張量，則相容，如 `t2` 是 Mx**3x3** 張量，或 Mx**2x4**，則不相容。
 
-### 2. 左、右運算元的張量形狀調整成一致 `t.broadcast_as`
+### 2. 左、右運算元的張量形狀調整成一致 `tensor.broadcast_as`
 
-在取得相容的維度後，透過 `t.broadcast_as` 函式，將兩個張量的形狀調整成一致。
+在取得相容的維度後，透過 `tensor.broadcast_as` 函式，將兩個張量的形狀調整成一致。
 
 ### 3. 使用張量四則運算計算結果
 
@@ -208,7 +208,7 @@ broadcast_binary_op!(broadcast_div, div);
 
 👉 範例程式：[tensor_broadcast.rs](../../tests/tensor_broadcast.rs)
 
-## 九、不同形狀的張量矩陣乘法 `t.broadcast_matmul`
+## 九、不同形狀的張量矩陣乘法 `tensor.broadcast_matmul`
 
 與其他的 `broadcast_xxx` 四則運算類似，必須先將兩個張量維度調整成相容後，再進行矩陣乘法。依源碼 `Shape::broadcast_shape_matmul` 規則，整理維度相容的規則如下：
 
@@ -236,4 +236,4 @@ broadcast_binary_op!(broadcast_div, div);
 
 ## 十一、下一步
 
-前往 [tensor-oop-2](../tensor-op-2/README.md) 了解其他張量操作。
+前往 [tensor-op-2](../tensor-op-2/README.md) 了解其他張量操作。

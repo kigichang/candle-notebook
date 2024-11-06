@@ -3,16 +3,6 @@ use rand::prelude::*;
 
 #[test]
 fn gather() -> Result<()> {
-    // sample from pytorch
-    // out[i][j][k] = input[index[i][j][k]][j][k]  # if dim == 0
-    // out[i][j][k] = input[i][index[i][j][k]][k]  # if dim == 1
-    // out[i][j][k] = input[i][j][index[i][j][k]]  # if dim == 2
-
-    // torch.tensor([[1, 2], [3, 4]])
-    // torch.gather(t, 1, torch.tensor([[0, 0], [1, 0]]))
-    // tensor([[ 1,  1],
-    //         [ 4,  3]])
-
     let t = Tensor::new(&[[1f32, 2.], [3., 4.]], &Device::Cpu)?;
     let v = t.to_vec2::<f32>()?;
     let index = Tensor::new(&[[0u32, 0], [1, 0]], &Device::Cpu)?;
@@ -114,5 +104,20 @@ fn gather_formula() -> Result<()> {
     let result = t.gather(&idx2, 2)?;
     assert_eq!(result.to_vec3::<f32>()?, result_v);
 
+    Ok(())
+}
+
+#[test]
+fn gather_err() -> Result<()> {
+    let t = Tensor::new(&[[1f32, 2.], [3., 4.]], &Device::Cpu)?;
+    // index 必須是整數型別。
+    let index = Tensor::new(&[[0.0f32, 0.], [1., 0.]], &Device::Cpu)?;
+    assert!(t.gather(&index, 1).is_err());
+
+    let index = Tensor::new(&[[0i64, 0], [1, 0]], &Device::Cpu)?;
+    t.gather(&index, 0)?;
+
+    let index = Tensor::new(&[[0u8, 0], [1, 0]], &Device::Cpu)?;
+    t.gather(&index, 0)?;
     Ok(())
 }
