@@ -86,7 +86,7 @@ $$
 
 #### `tensor.maximum`
 
-使用 `tensor.maximum` 比較兩個張量的每個元素，取最大值。由源碼來看，右運算子是 `TensorOrScalar`，可以是：
+使用 `tensor.maximum` 比較兩個張量的每個元素，取最大值。由原始碼來看，右運算子是 `TensorOrScalar`，可以是：
 
 1. 純量(數值，非純量張量)，資料型別可以與左運算元張量不同。
 1. 張量，則兩個張量形狀與型別必須相同。
@@ -147,7 +147,7 @@ $$
 
 ### 2. 堆疊多個張量
 
-`Tensor::stack` 會在指定的維度上堆疊多個張量，所有張量的形狀必須相同。堆疊後的結果比原張量多一維。由源碼來看，`Tensor::stack` 等同每個張量先做 `tensor.unsqueeze`，然後再作`Tensor::cat`，因此結果的張量維度比輸入張量多一維。
+`Tensor::stack` 會在指定的維度上堆疊多個張量，所有張量的形狀必須相同。堆疊後的結果比原張量多一維。由原始碼來看，`Tensor::stack` 等同每個張量先做 `tensor.unsqueeze`，然後再作`Tensor::cat`，因此結果的張量維度比輸入張量多一維。
 
 👉 範例程式：[tensor_stack.rs](../../tests/tensor_stack.rs)
 
@@ -181,7 +181,7 @@ out[i][j][k] = input[i][j][index[i][j][k]]  # if dim == 2
 
 ### 3. 切割張量 `tensor.chunk`
 
-`tensor.chunk` 可在指定的維度上將張量分割成指定數量的子張量。從源碼可見，`tensor.chunk` 的實作是透過 `tensor.narrow` 來達成分割。
+`tensor.chunk` 可在指定的維度上將張量分割成指定數量的子張量。從原始碼可見，`tensor.chunk` 的實作是透過 `tensor.narrow` 來達成分割。
 
 👉 範例程式：[tensor_chunk.rs](../../tests/tensor_chunk.rs)
 
@@ -193,7 +193,7 @@ out[i][j][k] = input[i][j][index[i][j][k]]  # if dim == 2
 
 ## 七. 張量取值 `tensor.i`
 
-`tensor.i` 是功能最完整的取值函式，可一次指定各維度的取值範圍。根據源碼分析，`tensor.i` 的索引是由 `TensorIndexer` 定義，其中 `TensorIndexer` 可包含以下幾種類型：
+`tensor.i` 是功能最完整的取值函式，可一次指定各維度的取值範圍。根據原始碼分析，`tensor.i` 的索引是由 `TensorIndexer` 定義，其中 `TensorIndexer` 可包含以下幾種類型：
 
 1. `Select(usize)`: 單一 `usize` 數值，用於取得單一維度或張量中的純量值。
 1. `Narrow(Bound<usize>, Bound<usize>)`: `Range` 類型，用於取得一段連續範圍的張量值。
@@ -204,7 +204,7 @@ out[i][j][k] = input[i][j][index[i][j][k]]  # if dim == 2
 1. `tensor.i(A)?`: 指定第 1 維的取值。
 1. `tensor.i((A, B, C))`: 指定每個維度的取值範圍。
 
-根據源碼顯示，`tensor.i` 的內部實作透過 `tensor.narrow` 和 `tensor.index_select` 來逐維度取值。需要注意的是，若最後一個維度使用 `Select(usize)` 進行取值，結果的張量會比原張量少一維。
+根據原始碼顯示，`tensor.i` 的內部實作透過 `tensor.narrow` 和 `tensor.index_select` 來逐維度取值。需要注意的是，若最後一個維度使用 `Select(usize)` 進行取值，結果的張量會比原張量少一維。
 
 👉 範例程式：[tensor_index.rs](../../tests/tensor_index.rs)
 

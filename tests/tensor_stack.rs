@@ -2,7 +2,7 @@ use candle_core::{Device, Result, Tensor};
 
 /// 使用 Tensor::stack 建立張量。
 /// 操作時，每個張量的維度形狀必須相同。
-/// 由源碼來看，Tensor::stack 等同每個張量先做 t.unsqueeze，然後再做 Tensor::cat
+/// 由原始碼來看，Tensor::stack 等同每個張量先做 t.unsqueeze，然後再做 Tensor::cat
 /// 結果的張量維度比輸入張量多一維。
 
 #[test]

@@ -172,7 +172,7 @@ let t = t.reshape((2, 3, 4))?;
 
 ## 八、不同形狀的張量四則運算 `tensor.broadcast_add`, `tensor.broadcast_sub`, `tensor.broadcast_mul`, and `tensor.broadcast_div`
 
-如果兩個張量的形狀不同時，如要進行四則運算，就需要使用 `broadcast_xxx` 相關函式。由於目前 Candle 目前沒有提供相關說明，因此透過研究源碼，整理運算流程。
+如果兩個張量的形狀不同時，如要進行四則運算，就需要使用 `broadcast_xxx` 相關函式。由於目前 Candle 目前沒有提供相關說明，因此透過研究原始碼，整理運算流程。
 
 ### 1. 左、右運算元的張量形狀是否相容 `Shape::broadcast_shape_binary_op`
 
@@ -195,7 +195,7 @@ let t = t.reshape((2, 3, 4))?;
 
 ### 3. 使用張量四則運算計算結果
 
-在源碼 **tensor.rs** 中，
+在原始碼 **tensor.rs** 中，
 
 ```rust
 broadcast_binary_op!(broadcast_add, add);
@@ -210,7 +210,7 @@ broadcast_binary_op!(broadcast_div, div);
 
 ## 九、不同形狀的張量矩陣乘法 `tensor.broadcast_matmul`
 
-與其他的 `broadcast_xxx` 四則運算類似，必須先將兩個張量維度調整成相容後，再進行矩陣乘法。依源碼 `Shape::broadcast_shape_matmul` 規則，整理維度相容的規則如下：
+與其他的 `broadcast_xxx` 四則運算類似，必須先將兩個張量維度調整成相容後，再進行矩陣乘法。依原始碼 `Shape::broadcast_shape_matmul` 規則，整理維度相容的規則如下：
 
 1. 兩個張量最後兩個維度大小，必須符合矩陣乘法的規則。
 1. 之後由右往左順序的維度大小，必須符合 broadcast 的規則。
