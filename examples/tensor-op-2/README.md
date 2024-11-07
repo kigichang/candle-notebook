@@ -204,13 +204,13 @@ out[i][j][k] = input[i][j][index[i][j][k]]  # if dim == 2
 1. `tensor.i(A)?`: 指定第 1 維的取值。
 1. `tensor.i((A, B, C))`: 指定每個維度的取值範圍。
 
-根據原始碼顯示，`tensor.i` 的內部實作透過 `tensor.narrow` 和 `tensor.index_select` 來逐維度取值。需要注意的是，若最後一個維度使用 `Select(usize)` 進行取值，結果的張量會比原張量少一維。
+根據原始碼顯示，`tensor.i` 的內部實作透過 `tensor.narrow` 和 `tensor.index_select` 來逐維度取值。需要注意的是，索引使用 `Select(usize)` ，則結果的張量會比原張量少一維。
 
 👉 範例程式：[tensor_index.rs](../../tests/tensor_index.rs)
 
 ### `tensor.contiguous` 問題
 
-在進行 `tensor.i` 操作後，張量的內部記憶體排列可能會發生改變，變為 **column-major**。這時可以使用 `tensor.contiguous` 確保記憶體排列，否則在某些張量的操作上，會發生錯誤。Candle 中的 **contiguous** 是 **row-major**；Fortran 中則是 **column-major**。
+在進行 `tensor.i` 操作後，新的張量的內部記憶體排列可能是 **column-major**。這時可以使用 `tensor.contiguous` 確保記憶體排列，否則在某些張量的操作上，會發生錯誤。Candle 中的 **contiguous** 是 **row-major**；Fortran 中則是 **column-major**。
 
 [Row- and column-major order](https://en.wikipedia.org/wiki/Row-_and_column-major_order)
 

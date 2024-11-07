@@ -253,8 +253,8 @@ fn index() -> Result<()> {
         Tensor::rand(0f32, dims[1] as f32, dims[1] / 2, &Device::Cpu)?.to_dtype(DType::U32)?;
     let idx2 = rand::random::<usize>() % dims[2];
 
-    // 最後一維如果是 indexer_select(usize) 則會被消除。
-    // 因為 indexer_select 最後回傳時，會做 squeeze(0)。
+    // 最後一維如果是 Select(usize) 則會被消除。
+    // 因為 Select(usize) 最後回傳時，會做 squeeze(0)。
     let choose = t.i((0..=idx0, &idx1, idx2))?.contiguous()?;
     assert_eq!(choose.dims(), &[idx0 + 1, dims[1] / 2]);
     let mut choose_v = vec![];
@@ -267,7 +267,7 @@ fn index() -> Result<()> {
     }
     assert_eq!(choose.to_vec2::<f32>()?, choose_v);
 
-    // 如果最後一維不是 indexer_select(usize)，則不會被消除。
+    // 如果最後一維不是 Select(usize)，則不會被消除。
     let idx2 = Tensor::new(vec![idx2 as u32], &Device::Cpu)?;
     let choose = t.i((0..=idx0, &idx1, &idx2))?.contiguous()?;
     assert_eq!(choose.dims(), &[idx0 + 1, dims[1] / 2, idx2.dims1()?]);
@@ -284,6 +284,14 @@ fn index() -> Result<()> {
         choose_v.push(v_j);
     }
     assert_eq!(choose.to_vec3::<f32>()?, choose_v);
+
+    // 如果是 Select(usize)，維度會與原本的維度少 1 維。
+    let v = t.i(0)?;
+    assert_eq!(v.dims(), &[dims[1], dims[2]]);
+    let v = t.i((.., 0))?;
+    assert_eq!(v.dims(), &[dims[0], dims[2]]);
+    let v = t.i((.., .., 0))?;
+    assert_eq!(v.dims(), &[dims[0], dims[1]]);
 
     Ok(())
 }
