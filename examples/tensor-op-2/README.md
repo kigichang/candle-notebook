@@ -208,9 +208,9 @@ out[i][j][k] = input[i][j][index[i][j][k]]  # if dim == 2
 
 👉 範例程式：[tensor_index.rs](../../tests/tensor_index.rs)
 
-### `tensor.contiguous` 問題
+### C contiguous (aka row major) 與 Fortran contiguous (aka column major) 問題 `tensor.is_contiguous`, `tensor.contiguous`
 
-在進行 `tensor.i` 操作後，新的張量的內部記憶體排列可能是 **column-major**。這時可以使用 `tensor.contiguous` 確保記憶體排列，否則在某些張量的操作上，會發生錯誤。Candle 中的 **contiguous** 是 **row-major**；Fortran 中則是 **column-major**。
+在進行 `tensor.i` 操作後，結果張量的內部記憶體排列可能是 **column-major**。這時可以使用 `tensor.contiguous` 確保記憶體排列。Candle 中的 **contiguous** 是 **row-major**，必須確保記憶體排行方式，否則在某些張量的操作上，會發生錯誤。
 
 [Row- and column-major order](https://en.wikipedia.org/wiki/Row-_and_column-major_order)
 
