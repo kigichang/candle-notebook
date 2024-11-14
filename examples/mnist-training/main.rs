@@ -15,7 +15,7 @@ extern crate accelerate_src;
 use clap::{Parser, ValueEnum};
 use rand::prelude::*;
 
-use candle_core::{DType, Result, Tensor, D};
+use candle_core::{DType, Device, Result, Tensor, D};
 use candle_nn::{loss, ops, Conv2d, Linear, Module, ModuleT, Optimizer, VarBuilder, VarMap};
 
 const IMAGE_DIM: usize = 784;
@@ -141,6 +141,7 @@ struct TrainingArgs {
     load: Option<String>,
     save: Option<String>,
     epochs: usize,
+    device: Device,
 }
 
 fn training_loop_cnn(
@@ -149,7 +150,8 @@ fn training_loop_cnn(
 ) -> anyhow::Result<()> {
     const BSIZE: usize = 64;
 
-    let dev = candle_core::Device::cuda_if_available(0)?;
+    //let dev = candle_core::Device::cuda_if_available(0)?;
+    let dev = &args.device;
 
     let train_labels = m.train_labels;
     let train_images = m.train_images.to_device(&dev)?;
@@ -212,8 +214,8 @@ fn training_loop<M: Model>(
     m: candle_datasets::vision::Dataset,
     args: &TrainingArgs,
 ) -> anyhow::Result<()> {
-    let dev = candle_core::Device::cuda_if_available(0)?;
-    //let dev = candle_examples::device(false)?;
+    //let dev = candle_core::Device::cuda_if_available(0)?;
+    let dev = &args.device;
 
     let train_labels = m.train_labels;
     let train_images = m.train_images.to_device(&dev)?;
@@ -270,6 +272,10 @@ struct Args {
     #[clap(value_enum, default_value_t = WhichModel::Linear)]
     model: WhichModel,
 
+    // forse to use cpu
+    #[arg(long)]
+    cpu: bool,
+
     #[arg(long)]
     learning_rate: Option<f64>,
 
@@ -312,6 +318,7 @@ pub fn main() -> anyhow::Result<()> {
         learning_rate: args.learning_rate.unwrap_or(default_learning_rate),
         load: args.load,
         save: args.save,
+        device: candle_notebook::device(args.cpu)?,
     };
     match args.model {
         WhichModel::Linear => {
