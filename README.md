@@ -26,9 +26,9 @@
     * 張量轉置。
     * 張量索引取值。
 1. [mnist-training](examples/mnist-training/README.md): 參考 Candle 的 [Mnist](https://github.com/huggingface/candle/blob/main/candle-examples/examples/mnist-training/main.rs) 範例，說明如何用 Candle 進行模型訓練，以及如何使用硬體加速。
+1. *[bert-base-chinese](examples/bert-base-chinese/README.md): 使用 [google-bert/bert-base-chinese](https://huggingface.co/google-bert/bert-base-chinese)，展示如何使用 Huggingface 的預訓練模型。
 1. *[crf](examples/crf/README.md): 分享怎麼把 [Pytorch 版的 Conditional Random Field (CRF)](https://github.com/kmkurn/pytorch-crf) 移植到 Candle 上。
 1. *[rnn](examples/rnn/README.md): 以 LSTM 為例，講解如何擴充 Candle 的功能。
-1. *[bert-base-chinese](examples/bert-base-chinese/README.md): 使用 [google-bert/bert-base-chinese](https://huggingface.co/google-bert/bert-base-chinese)，展示如何使用 Huggingface 的預訓練模型。
 1. *[CheatSheet](cheatsheet.md) 快速查詢指南。
 
 這份筆記是我邊學邊記錄的結果，未來會根據實際使用經驗和 Candle 的更新繼續補充。希望能幫助到其他對 Candle 有興趣的朋友！
