@@ -146,6 +146,7 @@ fn training_loop_cnn<M: Model>(
 
     let mut varmap = VarMap::new();
     let vs = VarBuilder::from_varmap(&varmap, DType::F32, &dev);
+
     let model = M::new(vs.clone())?;
 
     if let Some(load) = &args.load {
@@ -217,6 +218,7 @@ fn training_loop<M: Model>(
     }
 
     let mut sgd = candle_nn::SGD::new(varmap.all_vars(), args.learning_rate)?;
+
     let test_images = m.test_images.to_device(&dev)?;
     let test_labels = m.test_labels.to_dtype(DType::U32)?.to_device(&dev)?;
     for epoch in 1..args.epochs {
