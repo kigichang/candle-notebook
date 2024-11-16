@@ -2,11 +2,11 @@
 
 這個範例展示如何使用 Candle 訓練一個手寫辨識模型，以及 CPU/GPU 加速。
 
-在 Candle 的函式庫內，基礎的張量操作都定義在 `candle_core`；而深度學習的功能，多定義在 `candle_nn`；另外有 `candle-transformers` 類比 HuggingFace 官方的 Transformers 套件。
+在 Candle 的函式庫內，有關深度學習的函式，多定義 `candle_core` 與 `candle_nn`；另外有 `candle-transformers` 類比 HuggingFace 官方的 Transformers 套件。
 
 ## 1. MNIST
 
-MNIST 是深度學習入門經典的例子，數據集包含 0 到 9 的手寫數字圖片，每張圖片是 28x28 的灰階影像。本範例是修改 [官方的 MNIST 範例](https://github.com/huggingface/candle/tree/main/candle-examples/examples/mnist-training)，部分改用 `Modlule`, `ModuleT`, 及 `Sequential` 來實作。
+MNIST 是深度學習入門經典的例子，數據集包含 0 到 9 的手寫數字圖片，每張圖片是 28x28 影像。本範例是修改 [官方的 MNIST 範例](https://github.com/huggingface/candle/tree/main/candle-examples/examples/mnist-training)，部分改用 `Modlule`, `ModuleT`, 及 `Sequential` 來實作。
 
 Pytorch 或 Tensorflow 為了方便開發者去堆疊多個神經網路，都有提供 `Sequential` 功能。Candle 也有類似的功能 `Sequential`，但礙於 Rust 不是 Script 程式語言，無法做到像 Pytorch 這樣方便。其實只要將每個神經層依序呼叫就可以達到 `Sequential` 的效果。
 
@@ -218,11 +218,6 @@ impl Model for Mlp {
 `fn xxx(xs: &Tensor) -> Result<Tensor>` 可以直接使用 `add` 加入 `Sequential` 的原因是，Candle 自動幫這類型的函式實作了 `Module`。
 
 ```rust
-// A simple trait defining a module with forward method using a single argument.
-pub trait Module {
-    fn forward(&self, xs: &Tensor) -> Result<Tensor>;
-}
-
 impl<T: Fn(&Tensor) -> Result<Tensor>> Module for T {
     fn forward(&self, xs: &Tensor) -> Result<Tensor> {
         self(xs)
@@ -254,12 +249,12 @@ extern crate intel_mkl_src;
 extern crate accelerate_src;
 ```
 
-- intel_mkl_src: 應用在 Intel CPU。
-- accelerate_src: 應用在 Apple M 系列晶片的 CPU 加速。
+- `intel_mkl_src`: 應用在 Intel CPU。
+- `accelerate_src`: 應用在 Apple M 系列晶片的 CPU 加速。
 
 ### 3.1 Mac OS 環境
 
-Mac OS 不用再安裝額外的套件，即可使用硬體加速，也因此推薦 Mac 上練習。在執行時，加入 `--features "accelerate,metal"`，指定要使用 `accelerate` 與 `metal`。
+Mac OS 不用再安裝額外的套件，即可使用硬體加速，也因此推薦 Mac 上練習。在執行或編譯時，加入 `--features "accelerate,metal"`，指定使用 `accelerate` 與 `metal`。
 
 ```bash
 $ cargo run --release --example mnist-training --features "accelerate,metal"
@@ -267,11 +262,11 @@ $ cargo run --release --example mnist-training --features "accelerate,metal"
 
 ### 3.2 Intel + nVidia RTX4090 + Ubuntu 環境
 
-我另一組實驗的環境有安裝 Intel-MKL 與 CUDA。MKL 開發套件不要安裝最新 24.x.x。目前我使用的版本是 23.1.0。
+我另一組實驗的環境是 **Ubuntu**，安裝了 Intel-MKL 與 CUDA。MKL 開發套件不要安裝最新 24.x.x。目前我使用的版本是 23.1.0。
 
 CUDA 安裝的版本是：12.5。Driver 版本是：555.42.02。
 
-在執行時，加入 `--features "mkl,cuda"`，指定要使用 `mkl` 與 `cuda`。
+在執行或編譯時，加入 `--features "mkl,cuda"`，指定使用 `mkl` 與 `cuda`。
 
 ```bash
 $ cargo run --release --example mnist-training --features "mkl,cuda"
@@ -279,8 +274,7 @@ $ cargo run --release --example mnist-training --features "mkl,cuda"
 
 ## 4. 復盤
 
-- `candle_nn` 提供了深度學習的函式。
-- `VarMap` 載入與儲存 **safetensors** 格式的模型。
-- `Module` 與 `Sequential` 對比 Pytorch 的 `Module` 與 `Sequential`，但不像 Pytorch 那麼方便。
-- 訓練程式實作順序: 先建立模型，再設定 Optimizer 及載入模型。
-- CPU/GPU 加速: Mac OS 使用 `accelerate` 與 `metal`，Intel + nVidia GPU 使用 `mkl` 與 `cuda`。
+1. `VarMap` 載入與儲存 **safetensors** 格式的模型。
+1. `Module` 與 `Sequential` 對比 Pytorch 的 `Module` 與 `Sequential`，但不像 Pytorch 那麼方便。
+1. 訓練程式實作順序: 先建立模型，再設定 Optimizer 及載入模型。
+1. CPU/GPU 加速: Mac OS 使用 `accelerate` 與 `metal`，Intel CPU + nVidia GPU 使用 `mkl` 與 `cuda`。
