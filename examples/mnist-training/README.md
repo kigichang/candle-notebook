@@ -252,6 +252,41 @@ extern crate accelerate_src;
 - `intel_mkl_src`: 應用在 Intel CPU。
 - `accelerate_src`: 應用在 Apple M 系列晶片的 CPU 加速。
 
+使用 GPU 硬體加速程式碼如下：
+
+- `cuda_is_available`: 檢查是否有 CUDA 加速。
+- `metal_is_available`: 檢查是否有 Metal 加速。
+- `Device::new_cuda(0)`: 使用 CUDA 加速。
+- `Device::new_metal(0)`: 使用 Metal 加速。
+
+```rust
+use candle_core::utils::{cuda_is_available, metal_is_available};
+use candle_core::{DType, Device, Result, Shape, Tensor, WithDType};
+
+// from: https://github.com/huggingface/candle/blob/main/candle-examples/src/lib.rs
+pub fn device(cpu: bool) -> Result<Device> {
+    if cpu {
+        Ok(Device::Cpu)
+    } else if cuda_is_available() {
+        Ok(Device::new_cuda(0)?)
+    } else if metal_is_available() {
+        Ok(Device::new_metal(0)?)
+    } else {
+        #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
+        {
+            println!(
+                "Running on CPU, to run on GPU(metal), build this example with `--features metal`"
+            );
+        }
+        #[cfg(not(all(target_os = "macos", target_arch = "aarch64")))]
+        {
+            println!("Running on CPU, to run on GPU, build this example with `--features cuda`");
+        }
+        Ok(Device::Cpu)
+    }
+}
+```
+
 ### 3.1 Mac OS 環境
 
 Mac OS 不用再安裝額外的套件，即可使用硬體加速，也因此推薦 Mac 上練習。在執行或編譯時，加入 `--features "accelerate,metal"`，指定使用 `accelerate` 與 `metal`。
