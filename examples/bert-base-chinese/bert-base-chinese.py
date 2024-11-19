@@ -1,6 +1,6 @@
 from transformers import AutoTokenizer, AutoModelForMaskedLM
 import torch
-import torch.nn.functional as F
+import torch.nn.functional as nn
 
 tokenizer = AutoTokenizer.from_pretrained("bert-base-chinese")
 
@@ -30,7 +30,7 @@ mask_token_index = torch.where(inputs["input_ids"] == tokenizer.mask_token_id)[1
 mask_token_logits = logits[0, mask_token_index, :]
 
 # Apply softmax to get probabilities
-probabilities = F.softmax(mask_token_logits, dim=1)
+probabilities = nn.softmax(mask_token_logits, dim=1)
 
 # Get the top 5 predicted tokens and their probabilities
 top_5 = torch.topk(probabilities, 5, dim=1)

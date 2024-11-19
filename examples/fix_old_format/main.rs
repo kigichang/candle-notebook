@@ -38,7 +38,7 @@ fn main() -> Result<()> {
         )?
     };
 
-    let bert = BertForMaskedLM::load(vs, &config)?;
+    let _bert = BertForMaskedLM::load(vs, &config)?;
 
     let data =
         unsafe { candle_core::safetensors::MmapedSafetensors::new("new-model.safetensors")? };

@@ -23,8 +23,8 @@ fn main() -> Result<()> {
         (config, tokenizer, model)
     };
 
-    let config = load_config(config_filename)?;
     let tokenizers = Tokenizer::from_file(tokenizer_filename).map_err(E::msg)?;
+    let config = load_config(config_filename)?;
     let vb = VarBuilder::from_pth(model_filename, DType::F32, &device)?;
     let bert = BertForMaskedLM::load(vb, &config)?;
 
