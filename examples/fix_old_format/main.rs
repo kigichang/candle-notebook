@@ -3,14 +3,6 @@ use candle_nn::{VarBuilder, VarMap};
 use candle_transformers::models::bert::{BertForMaskedLM, Config};
 
 fn main() -> Result<()> {
-    // let varmap = {
-    //     let mut varmap = VarMap::new();
-    //     varmap.load("model.safetensors")?;
-    //     varmap
-    // };
-
-    // println!("{:?}", varmap.data());
-
     let data = unsafe { candle_core::safetensors::MmapedSafetensors::new("model.safetensors")? };
 
     let config = std::fs::read_to_string("config.json")?;
