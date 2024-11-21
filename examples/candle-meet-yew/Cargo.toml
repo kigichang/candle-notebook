@@ -1,0 +1,20 @@
+[package]
+name = "candle-meet-yew"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+yew = { version="0.21.0", features = ["csr"] }
+candle-core = "0.8.0"
+candle-nn = "0.8.0"
+candle-transformers = "0.8.0"
+tokenizers = { version = "0.20.3", default-features = false, features = ["unstable_wasm"] }
+getrandom = { version = "0.2", features = ["js"] }
+serde-wasm-bindgen = "0.6.5"
+
+# Wasm specific crates.
+#console_error_panic_hook = "0.1.7"
+
+#gloo = "0.11"
+#js-sys = "0.3.64"
+#wasm-bindgen = "0.2.87"
