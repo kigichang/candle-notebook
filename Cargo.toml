@@ -1,3 +1,5 @@
+[workspace]
+members = ["examples/candle-meet-yew"]
 [package]
 name = "candle-notebook"
 version = "0.1.0"

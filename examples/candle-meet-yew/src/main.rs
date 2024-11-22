@@ -3,12 +3,10 @@ use yew::prelude::*;
 
 #[function_component]
 fn App() -> Html {
-    let a = Tensor::new(vec![1.0_f32, 2.0, 3.0], &Device::Cpu).unwrap();
-    let b = a.sum(0).unwrap().to_vec0::<f32>().unwrap();
     html! {
         <div>
             <h1>{"Hello, Yew!"}</h1>
-            <h1>{b}</h1>
+            <h1>{Tensor::new(0u32, &Device::Cpu).unwrap().to_scalar::<u32>().unwrap()}</h1>
         </div>
     }
 }

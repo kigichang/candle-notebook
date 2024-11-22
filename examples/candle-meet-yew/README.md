@@ -9,8 +9,15 @@ dependency:
 
 see [https://github.com/huggingface/candle/issues/1032](https://github.com/huggingface/candle/issues/1032)
 
-```
+```toml
 [dependencies]
 tokenizers = { version = "0.14.0", default-features = false, features = ["unstable_wasm"] }
 getrandom = { version = "0.2", features = ["js"] }
+```
+
+## Build And Run
+
+```
+$ cd examples/candle-meet-yew
+$ trunk serve --open
 ```
