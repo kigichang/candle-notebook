@@ -19,13 +19,16 @@ fn main() -> Result<()> {
         let api = api.repo(repo);
         let config = api.get("config.json")?;
         let tokenizer = api.get("tokenizer.json")?;
-        let model = api.get("fix-bert-base-chinese.pth")?;
+        //let model = api.get("fix-bert-base-chinese.pth")?;
+        let model = api.get("fix-bert-base-chinese.safetensors")?;
         (config, tokenizer, model)
     };
 
     let tokenizers = Tokenizer::from_file(tokenizer_filename).map_err(E::msg)?;
     let config = load_config(config_filename)?;
-    let vb = VarBuilder::from_pth(model_filename, DType::F32, &device)?;
+    //let vb = VarBuilder::from_pth(model_filename, DType::F32, &device)?;
+    let vb =
+        unsafe { VarBuilder::from_mmaped_safetensors(&[model_filename], DType::F32, &device)? };
     let bert = BertForMaskedLM::load(vb, &config)?;
 
     let mask_id: u32 = tokenizers.token_to_id("[MASK]").unwrap();
