@@ -1,12 +1,19 @@
-use candle_core::{Device, Tensor};
+use wasm_bindgen::{prelude::*, UnwrapThrowExt};
+use web_sys::{console, window, Document, HtmlElement};
 use yew::prelude::*;
+
+mod bert_base_chinese;
+mod pickle;
+mod show_tensor;
+use bert_base_chinese::BertBaseChinese;
+use show_tensor::ShowTensor;
 
 #[function_component]
 fn App() -> Html {
     html! {
-        <div>
-            <h1>{"Hello, Yew!"}</h1>
-            <h1>{Tensor::new(0u32, &Device::Cpu).unwrap().to_scalar::<u32>().unwrap()}</h1>
+        <div class={classes!("container")}>
+            <ShowTensor />
+            <BertBaseChinese />
         </div>
     }
 }
