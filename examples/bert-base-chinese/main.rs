@@ -24,17 +24,17 @@ fn main() -> Result<()> {
         (config, tokenizer, model)
     };
 
-    let tokenizers = Tokenizer::from_file(tokenizer_filename).map_err(E::msg)?;
+    let tokenizer = Tokenizer::from_file(tokenizer_filename).map_err(E::msg)?;
     let config = load_config(config_filename)?;
     //let vb = VarBuilder::from_pth(model_filename, DType::F32, &device)?;
     let vb =
         unsafe { VarBuilder::from_mmaped_safetensors(&[model_filename], DType::F32, &device)? };
     let bert = BertForMaskedLM::load(vb, &config)?;
 
-    let mask_id: u32 = tokenizers.token_to_id("[MASK]").unwrap();
+    let mask_id: u32 = tokenizer.token_to_id("[MASK]").unwrap();
 
     for test_str in test_strs {
-        let ids = tokenizers.encode(test_str, true).map_err(E::msg)?;
+        let ids = tokenizer.encode(test_str, true).map_err(E::msg)?;
         let input_ids = Tensor::stack(&[Tensor::new(ids.get_ids(), &device)?], 0)?;
         let token_type_ids = Tensor::stack(&[Tensor::new(ids.get_type_ids(), &device)?], 0)?;
         let attention_mask = Tensor::stack(&[Tensor::new(ids.get_attention_mask(), &device)?], 0)?;
@@ -55,7 +55,7 @@ fn main() -> Result<()> {
         for (idx, prob) in top5_tokens {
             println!(
                 "{:?}: {:.3}",
-                tokenizers.id_to_token(idx as u32).unwrap(),
+                tokenizer.id_to_token(idx as u32).unwrap(),
                 prob
             );
         }

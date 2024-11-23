@@ -1,17 +1,13 @@
 use std::{
     error::Error,
     fmt::{Debug, Display},
-    future,
-    iter::Successors,
-    str::FromStr,
 };
 
-use candle_core::{DType, Device, Tensor};
-use candle_nn::{VarBuilder, VarMap};
+use candle_core::{DType, Device, IndexOp, Tensor};
+use candle_nn::VarBuilder;
 use candle_transformers::models::bert::{BertForMaskedLM, Config};
 use gloo::console;
-use safetensors;
-use tokenizers::{tokenizer, Tokenizer};
+use tokenizers::Tokenizer;
 use wasm_bindgen::prelude::*;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::Response;
@@ -35,19 +31,51 @@ impl From<JsValue> for FetchError {
     }
 }
 
-pub enum FetchState<T> {
-    NotFetching,
-    Fetching,
-    Success(T),
-    Failed(FetchError),
-}
+// pub enum FetchState<T> {
+//     NotFetching,
+//     Fetching,
+//     Success(T),
+//     Failed(FetchError),
+// }
 
 pub enum Msg {
-    SetTokenizers(FetchState<Tokenizer>),
-    GetConfig(FetchState<Config>),
-    GetModel(FetchState<BertForMaskedLM>),
-    DownloadTokenizer,
+    DownloadModel,
+    TokenizerDownloaded(Tokenizer),
+    ConfigDownloaded(Config),
+    DownloadBertModel,
+    ModelDownloaded(Vec<u8>),
+    Input,
     Inference(String),
+}
+
+#[derive(Properties, PartialEq)]
+pub struct Props {
+    pub can_inference: bool,
+}
+
+fn change_status(new_state: &str) {
+    gloo::utils::document()
+        .get_element_by_id("result")
+        .and_then(|elem| {
+            let content = elem.inner_html();
+            let content = if content.is_empty() {
+                new_state.to_owned()
+            } else {
+                console::log!("old:", content.clone());
+                content + "<br />" + new_state
+            };
+            elem.set_inner_html(&content);
+            Some(())
+        });
+}
+
+fn clear_status() {
+    gloo::utils::document()
+        .get_element_by_id("result")
+        .and_then(|elem| {
+            elem.set_inner_html("");
+            Some(())
+        });
 }
 
 async fn fetch_config() -> Result<String, JsValue> {
@@ -80,96 +108,153 @@ async fn fetch_model() -> Result<Vec<u8>, JsValue> {
 }
 
 pub struct BertBaseChinese {
-    model: FetchState<BertForMaskedLM>,
-    config: FetchState<Config>,
-    tokenizers: FetchState<Tokenizer>,
+    config: Option<Config>,
+    model: Option<BertForMaskedLM>,
+    tokenizer: Option<Tokenizer>,
+}
+
+impl BertBaseChinese {
+    fn inference(&self, test_str: &str) {
+        let device = &Device::Cpu;
+        let tokenizer = self.tokenizer.as_ref().unwrap();
+        let mask_id: u32 = tokenizer.token_to_id("[MASK]").unwrap();
+        let ids = tokenizer.encode(test_str, true).unwrap();
+        let input_ids = Tensor::stack(&[Tensor::new(ids.get_ids(), &device).unwrap()], 0).unwrap();
+        let token_type_ids =
+            Tensor::stack(&[Tensor::new(ids.get_type_ids(), &device).unwrap()], 0).unwrap();
+        let attention_mask = Tensor::stack(
+            &[Tensor::new(ids.get_attention_mask(), &device).unwrap()],
+            0,
+        )
+        .unwrap();
+        let result = self
+            .model
+            .as_ref()
+            .unwrap()
+            .forward(&input_ids, &token_type_ids, Some(&attention_mask))
+            .unwrap();
+
+        let mask_idx = ids.get_ids().iter().position(|&x| x == mask_id).unwrap();
+        let mask_token_logits = result.i((0, mask_idx, ..)).unwrap();
+        let mask_token_probs = candle_nn::ops::softmax(&mask_token_logits, 0).unwrap();
+        let mut top5_tokens: Vec<(usize, f32)> = mask_token_probs
+            .to_vec1::<f32>()
+            .unwrap()
+            .into_iter()
+            .enumerate()
+            .collect();
+        top5_tokens.sort_by(|a, b| b.1.total_cmp(&a.1));
+        let top5_tokens = top5_tokens.into_iter().take(5).collect::<Vec<_>>();
+
+        //println!("Input: {}", test_str);
+        clear_status();
+        for (idx, prob) in top5_tokens {
+            change_status(&format!(
+                "{:?}: {:.3}",
+                tokenizer.id_to_token(idx as u32).unwrap(),
+                prob
+            ));
+        }
+    }
 }
 
 impl Component for BertBaseChinese {
     type Message = Msg;
-    type Properties = ();
+    type Properties = Props;
 
-    fn create(ctx: &Context<Self>) -> Self {
+    fn create(_ctx: &Context<Self>) -> Self {
         Self {
-            model: FetchState::NotFetching,
-            config: FetchState::NotFetching,
-            tokenizers: FetchState::NotFetching,
+            config: None,
+            model: None,
+            tokenizer: None,
         }
     }
 
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
-            Msg::DownloadTokenizer => {
-                console::log!("download tokenizer");
+            Msg::DownloadModel => {
                 ctx.link().send_future(async {
-                    gloo::utils::document()
-                        .get_element_by_id("result")
-                        .and_then(|elem| {
-                            let content = elem.text_content().and_then(|s| {
-                                Some(format!("{:?}\n{:?}", s, "downloading tokenizers"))
-                            });
-                            Some(elem.set_text_content(content.as_deref()))
-                        });
+                    change_status("downloading tokenizers");
                     let tokenizer_json = fetch_tokenizer().await.unwrap();
-                    Msg::SetTokenizers(FetchState::Success(
-                        Tokenizer::from_bytes(&tokenizer_json).unwrap(),
-                    ))
+                    let tokenizer = Tokenizer::from_bytes(&tokenizer_json).unwrap();
+                    Msg::TokenizerDownloaded(tokenizer)
                 });
 
                 ctx.link().send_future(async {
-                    gloo::utils::document()
-                        .get_element_by_id("result")
-                        .and_then(|elem| {
-                            let content = elem.text_content().and_then(|s| {
-                                Some(format!("{:?}\n{:?}", s, "downloading config.json"))
-                            });
-                            Some(elem.set_text_content(content.as_deref()))
-                        });
+                    change_status("downloading config.json");
                     let config_json = fetch_config().await.unwrap();
                     let config = serde_json::from_str::<Config>(&config_json).unwrap();
-                    Msg::GetConfig(FetchState::Success(config))
+                    Msg::ConfigDownloaded(config)
                 });
             }
-            Msg::SetTokenizers(tokenizers) => {
-                console::log!("tokenizers loaded");
-                self.tokenizers = tokenizers;
-                gloo::utils::document()
-                    .get_element_by_id("result")
-                    .and_then(|elem| Some(elem.set_text_content(Some("tokenizers downloaded"))));
+            Msg::TokenizerDownloaded(tokenizer) => {
+                change_status("tokenizer downloaded");
+                self.tokenizer = Some(tokenizer);
             }
-            Msg::GetConfig(config) => {
-                self.config = config;
+            Msg::ConfigDownloaded(config) => {
+                change_status("config downloaded");
+                self.config = Some(config);
+                ctx.link().send_message(Msg::DownloadBertModel);
+            }
+            Msg::DownloadBertModel => {
+                change_status("downloading model");
                 ctx.link().send_future(async {
                     let model_bytes = fetch_model().await.unwrap();
-                    let vb = VarBuilder::from_buffered_safetensors(
-                        model_bytes,
-                        DType::F32,
-                        &Device::Cpu,
-                    )
-                    .unwrap();
-                    match config {
-                        FetchState::Success(cfg) => {
-                            let model = BertForMaskedLM::load(vb, &cfg).unwrap();
-                        }
-                        _ => {
-                            console::error!("failed to load config");
-                        }
-                    }
-
-                    Msg::Inference("".to_owned())
+                    Msg::ModelDownloaded(model_bytes)
                 });
             }
-            Msg::GetModel(model) => {
-                self.model = model;
+            Msg::ModelDownloaded(byte_buf) => {
+                change_status("model downloaded");
+                change_status("loading model");
+                let vb = VarBuilder::from_buffered_safetensors(byte_buf, DType::F32, &Device::Cpu)
+                    .unwrap();
+                let model = BertForMaskedLM::load(vb, self.config.as_ref().unwrap()).unwrap();
+                self.model = Some(model);
+                change_status("model loaded");
+                let btn = gloo::utils::document()
+                    .get_element_by_id("btn_submit")
+                    .unwrap()
+                    .dyn_into::<web_sys::HtmlElement>()
+                    .unwrap();
+                btn.class_list().remove_1("disabled").unwrap();
             }
-            Msg::Inference(input) => {
-                console::log!("inference: {:?}", input);
+            Msg::Input => {
+                if self.model.is_none() {
+                    change_status("model not loaded");
+                    ctx.link().send_message(Msg::DownloadModel);
+                    return false;
+                }
+
+                let input_str = gloo::utils::document()
+                    .get_element_by_id("input_example")
+                    .unwrap()
+                    .dyn_into::<web_sys::HtmlInputElement>()
+                    .unwrap()
+                    .value();
+                let btn = gloo::utils::document()
+                    .get_element_by_id("btn_submit")
+                    .unwrap()
+                    .dyn_into::<web_sys::HtmlElement>()
+                    .unwrap();
+                btn.class_list().add_1("disabled").unwrap();
+                clear_status();
+                ctx.link().send_message(Msg::Inference(input_str));
+            }
+            Msg::Inference(test_str) => {
+                self.inference(&test_str);
+                let btn = gloo::utils::document()
+                    .get_element_by_id("btn_submit")
+                    .unwrap()
+                    .dyn_into::<web_sys::HtmlElement>()
+                    .unwrap();
+                btn.class_list().remove_1("disabled").unwrap();
             }
         }
         true
     }
 
     fn view(&self, ctx: &Context<Self>) -> Html {
+        let do_inference = !ctx.props().can_inference;
         html! {
             <div>
                 <h1>{"Bert-Base-Chinese"}</h1>
@@ -177,110 +262,22 @@ impl Component for BertBaseChinese {
                     <div class="mb-3">
                         <label for="input_example" class="form-label">{"例句"}</label>
                         <div class="row">
-                            <input type="text" class="form-control col" id="input_example" placeholder="" />
-                            <button id="btn_submit" class="btn btn-primary col-1 ms-3" >{"送出"}</button>
-                            <button id="btn_download" class="btn btn-secondary col-1 ms-3" onclick={ctx.link().callback(|_| Msg::DownloadTokenizer)}>{"下載模型"}</button>
+                            <input type="text" class="form-control col" id="input_example" placeholder="" value="巴黎是[MASK]国的首都。" />
+                            <button id="btn_submit" class={classes!(
+                                "btn",
+                                "btn-primary",
+                                "col-1",
+                                "ms-3",
+                                do_inference.then(|| Some("disabled"))
+                                )}  onclick={ctx.link().callback(|_| Msg::Input)}>{"送出"}</button>
+                            <button id="btn_download" class="btn btn-secondary col-1 ms-3" onclick={ctx.link().callback(|_| Msg::DownloadModel)}>{"下載模型"}</button>
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label for="result" class="form-label">{"結果"}</label>
-                        <textarea class="form-control" id="result" rows="10"></textarea>
+                        <div id="result" class="border border-primary" style="height:20rem"></div>
                     </div>
                 </div>
             </div>
         }
     }
 }
-
-// impl Component for BertBaseChinese {
-//     type Message = Msg;
-//     type Properties = ();
-
-//     fn create(_: Self::Properties, link: ComponentLink<Self>) -> Self {
-//         Self {
-//             model: FetchState::NotFetching,
-//         }
-//     }
-
-//     fn update(&mut self, msg: Self::Message) -> ShouldRender {
-//         match msg {
-//             Msg::DownloadModel => {
-//                 self.model = FetchState::Fetching;
-//                 let future = async {
-//                     let config_json = fetch_config().await.unwrap();
-//                     console::log!("config_json: {:?}", config_json);
-//                     let config = serde_json::from_str::<Config>(&config_json).unwrap();
-//                     let model = BertForMaskedLM::load(config).unwrap();
-//                     FetchState::Success(model)
-//                 };
-//                 wasm_bindgen_futures::spawn_local(async {
-//                     match future.await {
-//                         FetchState::Success(model) => {
-//                             console::log!("model loaded");
-//                             self.model = FetchState::Success(model);
-//                         }
-//                         FetchState::Failed(err) => {
-//                             console::error!("failed to load model: {:?}", err);
-//                             self.model = FetchState::Failed(err);
-//                         }
-//                         _ => unreachable!(),
-//                     }
-//                 });
-//             }
-//             Msg::Inference(input) => {
-//                 console::log!("inference: {:?}", input);
-//             }
-//         }
-//         true
-//     }
-
-//     fn change(&mut self, _: Self::Properties) -> ShouldRender {
-//         false
-//     }
-
-//     fn view(&self) -> Html {
-//         let download = Callback::from(|_| Msg::DownloadModel);
-//         let inference = Callback::from(|input: InputData| Msg::Inference(input.value));
-//         html! {
-//             <div>
-//                 <h1>{"Bert-Base-Chinese"}</h1>
-//                 <div>
-//                     <div class="mb-3">
-//                         <label for="input_example" class="form-label">{"例句"}</label>
-//                         <div class="row">
-//                             <input type="text" class="form-control col" id="input_example" placeholder="" oninput={inference} />
-//                             <button id="btn_submit" class="btn btn-primary col-1 ms-3" >{"送出"}</button>
-//                             <button id="btn_download" class="btn btn-secondary col-1 ms-3" onclick={download}>{"下載模型"}</button>
-//                         </div>
-
-//                     </div>
-// }
-
-// #[function_component]
-// pub fn BertBaseChinese() -> Html {
-//     let download = Callback::from(|_| {
-//         console::log!("download config");
-//         let _config_json = fetch_config();
-//     });
-
-//     html! {
-//         <div>
-//             <h1>{"Bert-Base-Chinese"}</h1>
-//             <div>
-//                 <div class="mb-3">
-//                     <label for="input_example" class="form-label">{"例句"}</label>
-//                     <div class="row">
-//                         <input type="text" class="form-control col" id="input_example" placeholder="" />
-//                         <button id="btn_submit" class="btn btn-primary col-1 ms-3" >{"送出"}</button>
-//                         <button id="btn_download" class="btn btn-secondary col-1 ms-3" onclick={download}>{"下載模型"}</button>
-//                     </div>
-
-//                 </div>
-//                 <div class="mb-3">
-//                     <label for="result" class="form-label">{"結果"}</label>
-//                     <textarea class="form-control" id="result" rows="3"></textarea>
-//                 </div>
-//             </div>
-//         </div>
-//     }
-// }
