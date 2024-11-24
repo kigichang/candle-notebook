@@ -37,13 +37,34 @@ for key in output_stat_dict:
 torch.save(output_stat_dict, "fix-bert-base-chinese.pth")
 ```
 
+再利用 Candle 功能，讀取 Pytorch 模型檔案後，將每一個權重整理成 `HashMap`，最後再存成 `safetensors` 格式。
+
+```rust
+fn conv_pth_to_safetensor() -> Result<()> {
+    let pth_vec = candle_core::pickle::read_all("fix-bert-base-chinese.pth")?;
+    for item in &pth_vec {
+        println!("{:?}", item.0);
+    }
+    let mut tensor_map = HashMap::new();
+
+    for item in pth_vec {
+        tensor_map.insert(item.0, item.1);
+    }
+
+    candle_core::safetensors::save(&tensor_map, "fix-bert-base-chinese.safetensors")?;
+    Ok(())
+}
+```
+
+👉 範例程式：[conv_tensor.rs](../../tests/conv_tensor.rs)
+
 我已經將轉換好的模型檔案放在 [kigichang/fix-bert-base-chinese](https://huggingface.co/kigichang/fix-bert-base-chinese) 上，程式將從這邊下載模型檔案。
 
 ## 2. 程式說明
 
 ### 2.1 下載模型
 
-使用 Huggingface 提供的 `hf_hub` 自 Huggingface 下載模型檔案。下載的模型檔案包含三個檔案：`config.json`、`tokenizer.json`、`fix-bert-base-chinese.pth`。依我的 Macbook Pro 環境，檔案會放在 `~/.cache/huggingface/hub/models--kigichang--fix-bert-base-chinese` 目錄下。如果已經下載過，則不會再下載。
+使用 Huggingface 提供的 `hf_hub` 自 Huggingface 下載模型檔案。下載的模型檔案包含三個檔案：`config.json`、`tokenizer.json`、`fix-bert-base-chinese.safetensors`。依我的 Macbook Pro 環境，檔案會放在 `~/.cache/huggingface/hub/models--kigichang--fix-bert-base-chinese` 目錄下。如果已經下載過，則不會再下載。
 
 ```rust
 let default_model = "kigichang/fix-bert-base-chinese".to_string();
@@ -55,7 +76,7 @@ let (config_filename, tokenizer_filename, model_filename) = {
     let api = api.repo(repo);
     let config = api.get("config.json")?;
     let tokenizer = api.get("tokenizer.json")?;
-    let model = api.get("fix-bert-base-chinese.pth")?;
+    let model = api.get("fix-bert-base-chinese.safetensors")?;
     (config, tokenizer, model)
 };
 ```
@@ -69,7 +90,7 @@ Huggingface 提供 Git 的方式管理模型，因此可以使用 `Repo::with_re
 使用 Huggingface 提供的 `tokenizers` 載入模型使用的 Tokenizer。Python 版本的 Tokenizer 底層就是使用這個套件。
 
 ```rust
-let tokenizers = Tokenizer::from_file(tokenizer_filename).map_err(E::msg)?;
+let tokenizer = Tokenizer::from_file(tokenizer_filename).map_err(E::msg)?;
 ```
 
 #### 2.2.2 載入 bert-base-chinese 模型
@@ -81,16 +102,17 @@ let config = File::open(config_filename)?;
 Ok(serde_json::from_reader(config)?)
 ```
 
-使用 `VarBuilder` 載入 __Pytorch__ 模型檔案。官方建議是使用 __safetensors__ 格式。因為我們是由 Pytorch 來修正模型，所以使用 Pytorch 格式。
+使用 `VarBuilder` 載入 __safetensors__ 模型檔案。
+
+```rust
+let vb =
+        unsafe { VarBuilder::from_mmaped_safetensors(&[model_filename], DType::F32, &device)? };
+```
+
+載入 __safetensors__ 格式，記得要加上 `unsafe` 關鍵字。如要使用 Pytorch 模型，可以參考下面的程式碼。
 
 ```rust
 let vb = VarBuilder::from_pth(model_filename, DType::F32, &device)?;
-```
-
-如果要載入 __safetensors__ 格式，則參考以下程式碼，記得要加上 `unsafe` 關鍵字。
-
-```rust
-unsafe { VarBuilder::from_mmaped_safetensors(&[model_filename], DType::F32, &device)? }
 ```
 
 最後利用 `VarBuilder` 建立我們要使用的 `BertForMaskedLM` 模型。
@@ -104,7 +126,7 @@ let bert = BertForMaskedLM::load(vb, &config)?;
 首先我們將輸入的句子，產生對應的 ID (`input_ids`)。由於 `BertForMaskedLM` 會需要輸入一個 2D Tensor，因此我們使用 `Tensor::stack` 將 `input_ids` 轉成 2D Tensor。
 
 ```rust
-let ids = tokenizers.encode(test_str, true).map_err(E::msg)?;
+let ids = tokenizer.encode(test_str, true).map_err(E::msg)?;
 let input_ids = Tensor::stack(&[Tensor::new(ids.get_ids(), &device)?], 0)?;
 ```
 
@@ -126,7 +148,7 @@ let result = bert.forward(&input_ids, &token_type_ids, Some(&attention_mask))?;
 在結果的張量上，取得 `[MASK]` 的位置的張量結果，並計算 `softmax` 即為每個字的機率。
 
 ```rust
-let mask_id: u32 = tokenizers.token_to_id("[MASK]").unwrap();
+let mask_id: u32 = tokenizer.token_to_id("[MASK]").unwrap();
 ...
 
 let mask_idx = ids.get_ids().iter().position(|&x| x == mask_id).unwrap();
@@ -134,7 +156,7 @@ let mask_token_logits = result.i((0, mask_idx, ..))?;
 let mask_token_probs = softmax(&mask_token_logits, 0)?;
 ```
 
-最後取出前 5 個機率最高的字，使用 `tokenizers.id_to_token` 取得對應的字。
+最後取出前 5 個機率最高的字，使用 `tokenizer.id_to_token` 取得對應的字。
 
 ```rust
 let mut top5_tokens: Vec<(usize, f32)> = mask_token_probs
@@ -149,7 +171,7 @@ println!("Input: {}", test_str);
 for (idx, prob) in top5_tokens {
     println!(
         "{:?}: {:.3}",
-        tokenizers.id_to_token(idx as u32).unwrap(),
+        tokenizer.id_to_token(idx as u32).unwrap(),
         prob
     );
 }
@@ -163,4 +185,4 @@ for (idx, prob) in top5_tokens {
 1. 使用 `Tokenizer` 載入 Tokenizer。
 1. 使用 `BertForMaskedLM` 進行推論。
 1. 使用 `softmax` 計算機率。
-1. 使用 `tokenizers.id_to_token` 取得字。
+1. 使用 `tokenizer.id_to_token` 取得字。
