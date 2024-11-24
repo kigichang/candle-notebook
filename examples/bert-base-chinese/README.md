@@ -60,6 +60,8 @@ fn conv_pth_to_safetensor() -> Result<()> {
 
 我已經將轉換好的模型檔案放在 [kigichang/fix-bert-base-chinese](https://huggingface.co/kigichang/fix-bert-base-chinese) 上，程式將從這邊下載模型檔案。
 
+為什麼不使用[官方的工具](https://huggingface.co/spaces/safetensors/convert)？因為 bert-base-chinese 的模型中，有 [Shared Tensor](https://huggingface.co/docs/safetensors/torch_shared_tensors)，官方的工具只會保留第一個 key 值，其他 key 值會被刪除，造成在載入模型時出現錯誤。
+
 ## 2. 程式說明
 
 ### 2.1 下載模型
