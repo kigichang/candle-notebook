@@ -146,7 +146,6 @@ impl BertBaseChinese {
         top5_tokens.sort_by(|a, b| b.1.total_cmp(&a.1));
         let top5_tokens = top5_tokens.into_iter().take(5).collect::<Vec<_>>();
 
-        //println!("Input: {}", test_str);
         clear_status();
         for (idx, prob) in top5_tokens {
             change_status(&format!(
@@ -203,11 +202,12 @@ impl Component for BertBaseChinese {
                     Msg::ModelDownloaded(model_bytes)
                 });
             }
-            Msg::ModelDownloaded(byte_buf) => {
+            Msg::ModelDownloaded(model_bytes) => {
                 change_status("model downloaded");
                 change_status("loading model");
-                let vb = VarBuilder::from_buffered_safetensors(byte_buf, DType::F32, &Device::Cpu)
-                    .unwrap();
+                let vb =
+                    VarBuilder::from_buffered_safetensors(model_bytes, DType::F32, &Device::Cpu)
+                        .unwrap();
                 let model = BertForMaskedLM::load(vb, self.config.as_ref().unwrap()).unwrap();
                 self.model = Some(model);
                 change_status("model loaded");
