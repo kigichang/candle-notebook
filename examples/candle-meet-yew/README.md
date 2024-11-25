@@ -70,7 +70,7 @@ $ cp tokenizer.json ./dist
 
 ## 3. 程式碼說明
 
-這篇不會說明[Yew](https://yew.rs/)，只會說明如何使用 Candle 在瀏覽器上執行預訓練模型。主要程式碼檔案 [bert_base_chinese.rs](src/bert_base_chinese.rs)。
+這篇不會說明 [Yew](https://yew.rs/)，只會說明如何使用 Candle 在瀏覽器上執行預訓練模型。主要程式碼檔案 [bert_base_chinese.rs](src/bert_base_chinese.rs)。
 
 ### 3.1 測試使用 Tensor
 
