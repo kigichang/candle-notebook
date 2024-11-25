@@ -1,8 +1,3 @@
-use std::{
-    error::Error,
-    fmt::{Debug, Display},
-};
-
 use candle_core::{DType, Device, IndexOp, Tensor};
 use candle_nn::VarBuilder;
 use candle_transformers::models::bert::{BertForMaskedLM, Config};
@@ -13,39 +8,14 @@ use wasm_bindgen_futures::JsFuture;
 use web_sys::Response;
 use yew::prelude::*;
 
-#[derive(Debug, Clone, PartialEq)]
-pub struct FetchError {
-    err: JsValue,
-}
-
-impl Display for FetchError {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        Debug::fmt(&self.err, f)
-    }
-}
-impl Error for FetchError {}
-
-impl From<JsValue> for FetchError {
-    fn from(err: JsValue) -> Self {
-        Self { err }
-    }
-}
-
-// pub enum FetchState<T> {
-//     NotFetching,
-//     Fetching,
-//     Success(T),
-//     Failed(FetchError),
-// }
-
 pub enum Msg {
-    DownloadModel,
-    TokenizerDownloaded(Tokenizer),
-    ConfigDownloaded(Config),
-    DownloadBertModel,
-    ModelDownloaded(Vec<u8>),
-    Input,
-    Inference(String),
+    DownloadModel,                 // 請求下載模型
+    TokenizerCompleted(Tokenizer), // Tokenizer 完成
+    BertConfigCompleted(Config),   // Bert Config 完成
+    BertModelLoaded,               // Bert 載入完成
+    ModelDownloaded(Vec<u8>),      // 下載模型完成
+    Input,                         // 請求推論
+    Inference(String),             // 處理推論請求
 }
 
 #[derive(Properties, PartialEq)]
@@ -53,6 +23,7 @@ pub struct Props {
     pub can_inference: bool,
 }
 
+/// 修改狀態
 fn change_status(new_state: &str) {
     gloo::utils::document()
         .get_element_by_id("result")
@@ -69,6 +40,7 @@ fn change_status(new_state: &str) {
         });
 }
 
+/// 清空狀態
 fn clear_status() {
     gloo::utils::document()
         .get_element_by_id("result")
@@ -78,6 +50,7 @@ fn clear_status() {
         });
 }
 
+/// 下載 config.json
 async fn fetch_config() -> Result<String, JsValue> {
     console::log!("fetch config");
     let window = gloo::utils::window();
@@ -87,6 +60,7 @@ async fn fetch_config() -> Result<String, JsValue> {
     Ok(text.as_string().unwrap())
 }
 
+/// 下載 tokenizer.json
 async fn fetch_tokenizer() -> Result<Vec<u8>, JsValue> {
     console::log!("fetch tokenizer");
     let window = gloo::utils::window();
@@ -97,6 +71,7 @@ async fn fetch_tokenizer() -> Result<Vec<u8>, JsValue> {
     Ok(js_sys::Uint8Array::new(&buf).to_vec())
 }
 
+/// 下載 model 檔
 async fn fetch_model() -> Result<Vec<u8>, JsValue> {
     console::log!("fetch model");
     let window = gloo::utils::window();
@@ -114,6 +89,7 @@ pub struct BertBaseChinese {
 }
 
 impl BertBaseChinese {
+    /// 推論
     fn inference(&self, test_str: &str) {
         let device = &Device::Cpu;
         let tokenizer = self.tokenizer.as_ref().unwrap();
@@ -172,31 +148,33 @@ impl Component for BertBaseChinese {
     fn update(&mut self, ctx: &Context<Self>, msg: Self::Message) -> bool {
         match msg {
             Msg::DownloadModel => {
+                // 請求下載模型
                 ctx.link().send_future(async {
                     change_status("downloading tokenizers");
                     let tokenizer_json = fetch_tokenizer().await.unwrap();
                     let tokenizer = Tokenizer::from_bytes(&tokenizer_json).unwrap();
-                    Msg::TokenizerDownloaded(tokenizer)
+                    Msg::TokenizerCompleted(tokenizer)
                 });
 
+                // 下載 config.json
                 ctx.link().send_future(async {
                     change_status("downloading config.json");
                     let config_json = fetch_config().await.unwrap();
                     let config = serde_json::from_str::<Config>(&config_json).unwrap();
-                    Msg::ConfigDownloaded(config)
+                    Msg::BertConfigCompleted(config)
                 });
             }
-            Msg::TokenizerDownloaded(tokenizer) => {
-                change_status("tokenizer downloaded");
+            Msg::TokenizerCompleted(tokenizer) => {
+                change_status("tokenizer completed");
                 self.tokenizer = Some(tokenizer);
             }
-            Msg::ConfigDownloaded(config) => {
-                change_status("config downloaded");
+            Msg::BertConfigCompleted(config) => {
+                change_status("config completed");
                 self.config = Some(config);
-                ctx.link().send_message(Msg::DownloadBertModel);
+                ctx.link().send_message(Msg::BertModelLoaded);
             }
-            Msg::DownloadBertModel => {
-                change_status("downloading model");
+            Msg::BertModelLoaded => {
+                change_status("model loaded");
                 ctx.link().send_future(async {
                     let model_bytes = fetch_model().await.unwrap();
                     Msg::ModelDownloaded(model_bytes)

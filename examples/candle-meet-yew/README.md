@@ -87,6 +87,7 @@ $ cp tokenizer.json ./dist
 從網站上下載模型。
 
 ```rust
+/// 下載 config.json
 async fn fetch_config() -> Result<String, JsValue> {
     console::log!("fetch config");
     let window = gloo::utils::window();
@@ -96,6 +97,7 @@ async fn fetch_config() -> Result<String, JsValue> {
     Ok(text.as_string().unwrap())
 }
 
+/// 下載 tokenizer.json
 async fn fetch_tokenizer() -> Result<Vec<u8>, JsValue> {
     console::log!("fetch tokenizer");
     let window = gloo::utils::window();
@@ -106,6 +108,7 @@ async fn fetch_tokenizer() -> Result<Vec<u8>, JsValue> {
     Ok(js_sys::Uint8Array::new(&buf).to_vec())
 }
 
+/// 下載 model 檔
 async fn fetch_model() -> Result<Vec<u8>, JsValue> {
     console::log!("fetch model");
     let window = gloo::utils::window();
@@ -148,6 +151,7 @@ let model = BertForMaskedLM::load(vb, self.config.as_ref().unwrap()).unwrap();
 以下為推論的程式，與原本的程式碼幾乎一樣，只是將結果顯示在瀏覽器上。
 
 ```rust
+/// 推論
 fn inference(&self, test_str: &str) {
     let device = &Device::Cpu;
     let tokenizer = self.tokenizer.as_ref().unwrap();
