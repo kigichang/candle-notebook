@@ -35,6 +35,7 @@ fn main() -> Result<()> {
 
     for test_str in test_strs {
         let ids = tokenizer.encode(test_str, true).map_err(E::msg)?;
+        println!("ids: {:?}", ids);
         let input_ids = Tensor::stack(&[Tensor::new(ids.get_ids(), &device)?], 0)?;
         let token_type_ids = Tensor::stack(&[Tensor::new(ids.get_type_ids(), &device)?], 0)?;
         let attention_mask = Tensor::stack(&[Tensor::new(ids.get_attention_mask(), &device)?], 0)?;
@@ -60,9 +61,10 @@ fn main() -> Result<()> {
             );
         }
         {
-            let (_, sentence_len, _) = result.dims3()?;
-            let words = test_str.chars().collect::<Vec<_>>();
-            for i in 0..sentence_len {
+            let (_, token_len, _) = result.dims3()?;
+            let word_ids = ids.get_ids();
+            //let words = test_str.chars().collect::<Vec<_>>();
+            for i in 0..token_len {
                 let token_logits = result.i((0, i, ..))?;
                 let token_probs = softmax(&token_logits, 0)?;
                 let mut top5_tokens: Vec<(usize, f32)> = token_probs
@@ -73,7 +75,10 @@ fn main() -> Result<()> {
                 top5_tokens.sort_by(|a, b| b.1.total_cmp(&a.1));
                 let top5_tokens = top5_tokens.into_iter().take(5).collect::<Vec<_>>();
 
-                println!("similar with ({i}){:?} are: ", words.get(i).unwrap());
+                println!(
+                    "similar with ({i}){:?} are: ",
+                    tokenizer.id_to_token(word_ids[i]).unwrap()
+                );
                 for (idx, prob) in top5_tokens {
                     println!(
                         "{:?}: {:.3}",
