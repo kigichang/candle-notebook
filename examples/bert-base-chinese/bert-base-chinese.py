@@ -1,18 +1,30 @@
-from transformers import AutoTokenizer, AutoModelForMaskedLM
+#from transformers import AutoTokenizer, AutoModelForMaskedLM
+from transformers import (
+  BertTokenizerFast,
+  AutoTokenizer,
+  AutoModelForMaskedLM,
+)
+
+
 import torch
 import torch.nn.functional as nn
 
+# 我的修正模型
 tokenizer = AutoTokenizer.from_pretrained("bert-base-chinese")
-
 model = AutoModelForMaskedLM.from_pretrained("bert-base-chinese")
 
+# 中研院模型
+# tokenizer = BertTokenizerFast.from_pretrained('bert-base-chinese')
+# model = AutoModelForMaskedLM.from_pretrained('ckiplab/bert-base-chinese')
+
+
 # fix old format of the model for candle start
-model.eval()
-output_stat_dict = model.state_dict()
-for key in output_stat_dict:
-    if "beta" in key or "gamma" in key:
-        print("warning: old format name:", key)
-torch.save(output_stat_dict, "fix-bert-base-chinese.pth")
+# model.eval()
+# output_stat_dict = model.state_dict()
+# for key in output_stat_dict:
+#     if "beta" in key or "gamma" in key:
+#         print("warning: old format name:", key)
+# torch.save(output_stat_dict, "fix-bert-base-chinese.pth")
 # fix old format of the model for candle end
 
 test_str = "巴黎是[MASK]国的首都。"

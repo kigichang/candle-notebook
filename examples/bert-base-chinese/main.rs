@@ -1,5 +1,5 @@
 use anyhow::{Error as E, Result};
-use candle_core::{DType, IndexOp, Tensor};
+use candle_core::{DType, Device, IndexOp, Tensor};
 use candle_nn::{ops::softmax, VarBuilder};
 use candle_transformers::models::bert::{BertForMaskedLM, Config};
 use hf_hub::{api::sync::Api, Repo, RepoType};
@@ -10,26 +10,8 @@ fn main() -> Result<()> {
 
     let device = candle_notebook::device(false)?;
 
-    let default_model = "kigichang/fix-bert-base-chinese".to_string();
-    let default_revision = "main".to_string();
-    let repo = Repo::with_revision(default_model, RepoType::Model, default_revision);
-
-    let (config_filename, tokenizer_filename, model_filename) = {
-        let api = Api::new()?;
-        let api = api.repo(repo);
-        let config = api.get("config.json")?;
-        let tokenizer = api.get("tokenizer.json")?;
-        //let model = api.get("fix-bert-base-chinese.pth")?;
-        let model = api.get("fix-bert-base-chinese.safetensors")?;
-        (config, tokenizer, model)
-    };
-
-    let tokenizer = Tokenizer::from_file(tokenizer_filename).map_err(E::msg)?;
-    let config = load_config(config_filename)?;
-    //let vb = VarBuilder::from_pth(model_filename, DType::F32, &device)?;
-    let vb =
-        unsafe { VarBuilder::from_mmaped_safetensors(&[model_filename], DType::F32, &device)? };
-    let bert = BertForMaskedLM::load(vb, &config)?;
+    let (tokenizer, bert) = load_from_my_fix(&device)?;
+    //let (tokenizer, bert) = load_from_ckiplab(&device)?;
 
     let mask_id: u32 = tokenizer.token_to_id("[MASK]").unwrap();
 
@@ -97,4 +79,63 @@ fn main() -> Result<()> {
 fn load_config<P: AsRef<Path>>(config_filename: P) -> Result<Config> {
     let config = File::open(config_filename)?;
     Ok(serde_json::from_reader(config)?)
+}
+
+/// 使用我修正的模型
+/// https://huggingface.co/kigichang/fix-bert-base-chinese/tree/main
+fn load_from_my_fix(device: &Device) -> Result<(Tokenizer, BertForMaskedLM)> {
+    let default_model = "kigichang/fix-bert-base-chinese".to_owned();
+    let default_revision = "main".to_owned();
+    let repo = Repo::with_revision(default_model, RepoType::Model, default_revision);
+
+    let (config_filename, tokenizer_filename, model_filename) = {
+        let api = Api::new()?;
+        let api = api.repo(repo);
+        let config = api.get("config.json")?;
+        let tokenizer = api.get("tokenizer.json")?;
+        //let model = api.get("fix-bert-base-chinese.pth")?;
+        let model = api.get("fix-bert-base-chinese.safetensors")?;
+        (config, tokenizer, model)
+    };
+
+    let tokenizer = Tokenizer::from_file(tokenizer_filename).map_err(E::msg)?;
+    let config = load_config(config_filename)?;
+    //let vb = VarBuilder::from_pth(model_filename, DType::F32, &device)?;
+    let vb =
+        unsafe { VarBuilder::from_mmaped_safetensors(&[model_filename], DType::F32, &device)? };
+    let bert = BertForMaskedLM::load(vb, &config)?;
+    Ok((tokenizer, bert))
+}
+
+/// 使用中研院的模型
+/// https://huggingface.co/ckiplab/bert-base-chinese
+#[allow(dead_code)]
+fn load_from_ckiplab(device: &Device) -> Result<(Tokenizer, BertForMaskedLM)> {
+    let default_model = "bert-base-chinese".to_owned();
+    let default_revision = "main".to_owned();
+    let repo = Repo::with_revision(default_model, RepoType::Model, default_revision);
+    let tokenizer_filename = {
+        let api = Api::new()?;
+        let api = api.repo(repo);
+        let tokenizer = api.get("tokenizer.json")?;
+        tokenizer
+    };
+
+    let default_model = "ckiplab/bert-base-chinese".to_string();
+    let default_revision = "main".to_string();
+    let repo = Repo::with_revision(default_model, RepoType::Model, default_revision);
+
+    let (config_filename, model_filename) = {
+        let api = Api::new()?;
+        let api = api.repo(repo);
+        let config = api.get("config.json")?;
+        let model = api.get("pytorch_model.bin")?;
+        (config, model)
+    };
+
+    let tokenizer = Tokenizer::from_file(tokenizer_filename).map_err(E::msg)?;
+    let config = load_config(config_filename)?;
+    let vb = VarBuilder::from_pth(model_filename, DType::F32, &device)?;
+    let bert = BertForMaskedLM::load(vb, &config)?;
+    Ok((tokenizer, bert))
 }
