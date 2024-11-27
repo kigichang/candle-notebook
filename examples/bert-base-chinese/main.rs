@@ -59,6 +59,31 @@ fn main() -> Result<()> {
                 prob
             );
         }
+        {
+            let (_, sentence_len, _) = result.dims3()?;
+            let words = test_str.chars().collect::<Vec<_>>();
+            for i in 0..sentence_len {
+                let token_logits = result.i((0, i, ..))?;
+                let token_probs = softmax(&token_logits, 0)?;
+                let mut top5_tokens: Vec<(usize, f32)> = token_probs
+                    .to_vec1::<f32>()?
+                    .into_iter()
+                    .enumerate()
+                    .collect();
+                top5_tokens.sort_by(|a, b| b.1.total_cmp(&a.1));
+                let top5_tokens = top5_tokens.into_iter().take(5).collect::<Vec<_>>();
+
+                println!("similar with ({i}){:?} are: ", words.get(i).unwrap());
+                for (idx, prob) in top5_tokens {
+                    println!(
+                        "{:?}: {:.3}",
+                        tokenizer.id_to_token(idx as u32).unwrap(),
+                        prob
+                    );
+                }
+            }
+            println!();
+        }
     }
 
     Ok(())

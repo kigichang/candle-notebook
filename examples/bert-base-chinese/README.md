@@ -25,7 +25,7 @@ Input: 生活的真谛是[MASK]。
 
 ### 1.1 準備工作
 
-__bert-base-chinese.py__ 是 Pytorch 版本程式，此範例將 __bert-base-chinese.py__，移植到 Candle 上。由於官方上的模型檔案是舊的格式，目前 Candle 不支援，因此需要將模型轉成新格式。__bert-base-chinese.py__ 中有一段程式碼，可以將模型修正成新格式。
+[bert-base-chinese.py](bert-base-chinese.py) 是 Pytorch 版本程式，此範例將 __bert-base-chinese.py__，移植到 Candle 上。由於官方上的模型檔案是舊的格式，目前 Candle 不支援，因此需要將模型轉成新格式。__bert-base-chinese.py__ 中有一段程式碼，可以將模型修正成新格式。
 
 ```python
 model = AutoModelForMaskedLM.from_pretrained("bert-base-chinese")
