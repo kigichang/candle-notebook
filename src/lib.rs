@@ -1,5 +1,9 @@
+use std::path::{Path, PathBuf};
+
 use candle_core::utils::{cuda_is_available, metal_is_available};
 use candle_core::{DType, Device, Result, Shape, Tensor, WithDType};
+use hf_hub::api::sync::Api;
+use hf_hub::{Repo, RepoType};
 
 // from: https://github.com/huggingface/candle/blob/main/candle-examples/src/lib.rs
 pub fn device(cpu: bool) -> Result<Device> {
@@ -35,6 +39,24 @@ pub fn scalar_to_tensor<T: WithDType, S: Into<Shape>>(
         .broadcast_as(shape)?
         .to_dtype(dtype)?
         .to_device(device)
+}
+
+/// 從 HF Hub 下載 Tokenizer、Config 和 Model。
+pub fn load_from_hf_hub(
+    model: &str,
+    revision: &str,
+    tokenizer_filename: &str,
+    config_filename: &str,
+    model_filename: &str,
+) -> anyhow::Result<(PathBuf, PathBuf, PathBuf)> {
+    let repo = Repo::with_revision(model.to_owned(), RepoType::Model, revision.to_owned());
+
+    let api = Api::new()?;
+    let api = api.repo(repo);
+    let tokenizer = api.get(tokenizer_filename)?;
+    let config = api.get(config_filename)?;
+    let model = api.get(model_filename)?;
+    Ok((tokenizer, config, model))
 }
 
 macro_rules! cmp_op  {
