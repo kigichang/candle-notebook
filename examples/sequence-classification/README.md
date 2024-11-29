@@ -4,7 +4,7 @@
 
 [cross-encoder/ms-marco-MiniLM-L-6-v2](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-6-v2) 是給一個問句，從多個句子中找出最相關的句子。通常用在 RAG (Retrieval Augmented Generation) 流程中，Reranking 的步驟。此模型會用到 __BertForSequenceClassification__。但目前 Candle 的 [bert.rs](https://github.com/huggingface/candle/blob/main/candle-transformers/src/models/bert.rs) 沒有實作 __BertForSequenceClassification__，所以延續官方的程式碼，自己實作一個。
 
-範例最後的結果，要與模型官方網站的結果一致，我將官方的範例程式放在[test_seqence_classification.py](test_seqence_classification.py)。
+範例最後的結果，要與模型官方網站的結果一致，我將官方的範例程式放在 [test_seqence_classification.py](test_seqence_classification.py)。
 
 ## 2. 實作
 
@@ -44,7 +44,7 @@ tensor([[  8.8459],
 
 #### 2.1.1 AutoTokenizer 與 AutoModelForSequenceClassification
 
-在 transformers 套件中，`AutoTokenizer` 與 `AutoModelForSequenceClassification` 會將以上的程式碼自動轉換成 `BertTokenizerFast` 與 `BertForSequenceClassification`。Python 的 `Tokenizer` 底層用的是 Rust `tokenizers` 套件，因此不需要再實作。如果想知道 Python 是用那個物件，可以用
+在 transformers 套件中，`AutoTokenizer` 與 `AutoModelForSequenceClassification` 會自動對應使用 `BertTokenizerFast` 與 `BertForSequenceClassification`。Python 的 `Tokenizer` 底層用的是 Rust `tokenizers` 套件，因此不需要再實作。如果想知道 Python 是用那個物件，可以用
 
 ```python
 print(tokenizer)
@@ -64,7 +64,7 @@ BertTokenizerFast(...)
 1. pytorch 或 safetensors 模型檔。
 1. `tokenizer.json`: tokenizer 的設定檔。
 
-從官網來看，缺少了 `tokenizer.json`。我們可以透過 python 的範例程式，來產生 `tokenizer.json`。如下：
+從官網來看，缺少了 `tokenizer.json`。我們可以透過 Python 的範例程式，來產生 `tokenizer.json`。如下：
 
 ```python
 tokenizer.save_pretrained("tmp")
@@ -74,7 +74,7 @@ tokenizer.save_pretrained("tmp")
 
 ### 2.2 模型結構
 
-由於我們要實作 BertForSequenceClassification，我們需要先了解它的結構。可以透過以下程式碼來查看。
+由於我們要實作 `BertForSequenceClassification`，我們需要先了解它的結構。可以透過以下程式碼來查看。
 
 ```python
 print(model)
@@ -381,7 +381,7 @@ let params = tokenizers::PaddingParams::default();
 let tokenizer = tokenizer.with_padding(Some(params));
 ```
 
-這邊與先前範例不同，由於比對的答句長度不一致，所以我們需要加入 padding 設定，讓所有的 token 長度對齊一致。
+這邊與先前範例不同，由於比較的答句長度不同，所以我們需要加入 padding 設定，讓答句 token 的長度對齊一致。
 
 #### 3.3.3 輸入問句與答句
 
