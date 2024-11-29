@@ -7,9 +7,10 @@
 //! - Upstream [Github repo](https://github.com/google-research/bert).
 //! - See bert in [candle-examples](https://github.com/huggingface/candle/tree/main/candle-examples/) for runnable code
 //!
-use super::with_tracing::{layer_norm, linear, LayerNorm, Linear};
-use candle::{DType, Device, Result, Tensor};
+#![allow(dead_code)]
+use candle_core::{DType, Device, IndexOp, Result, Tensor};
 use candle_nn::{embedding, Embedding, Module, VarBuilder};
+use candle_transformers::models::with_tracing::{layer_norm, linear, LayerNorm, Linear};
 use serde::Deserialize;
 
 pub const DTYPE: DType = DType::F32;
@@ -33,7 +34,7 @@ impl HiddenActLayer {
         Self { act, span }
     }
 
-    fn forward(&self, xs: &Tensor) -> candle::Result<Tensor> {
+    fn forward(&self, xs: &Tensor) -> candle_core::Result<Tensor> {
         let _enter = self.span.enter();
         match self.act {
             // https://github.com/huggingface/transformers/blob/cd4584e3c809bb9e1392ccd3fe38b40daba5519a/src/transformers/activations.py#L213
@@ -255,13 +256,13 @@ impl BertSelfAttention {
         let attention_scores = attention_scores.broadcast_add(attention_mask)?;
         let attention_probs = {
             let _enter_sm = self.span_softmax.enter();
-            candle_nn::ops::softmax(&attention_scores, candle::D::Minus1)?
+            candle_nn::ops::softmax(&attention_scores, candle_core::D::Minus1)?
         };
         let attention_probs = self.dropout.forward(&attention_probs)?;
 
         let context_layer = attention_probs.matmul(&value_layer)?;
         let context_layer = context_layer.transpose(1, 2)?.contiguous()?;
-        let context_layer = context_layer.flatten_from(candle::D::Minus2)?;
+        let context_layer = context_layer.flatten_from(candle_core::D::Minus2)?;
         Ok(context_layer)
     }
 }
@@ -506,7 +507,7 @@ fn get_extended_attention_mask(attention_mask: &Tensor, dtype: DType) -> Result<
     let attention_mask = match attention_mask.rank() {
         3 => attention_mask.unsqueeze(1)?,
         2 => attention_mask.unsqueeze(1)?.unsqueeze(1)?,
-        _ => candle::bail!("Wrong shape for input_ids or attention_mask"),
+        _ => candle_core::bail!("Wrong shape for input_ids or attention_mask"),
     };
     let attention_mask = attention_mask.to_dtype(dtype)?;
     // torch.finfo(dtype).min
@@ -608,5 +609,71 @@ impl BertForMaskedLM {
             .bert
             .forward(input_ids, token_type_ids, attention_mask)?;
         self.cls.forward(&sequence_output)
+    }
+}
+
+// https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L737
+pub struct BertPooler {
+    dense: Linear,
+    activation: fn(&Tensor) -> candle_core::Result<Tensor>,
+}
+
+impl BertPooler {
+    // https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L738
+    pub fn load(vb: VarBuilder, config: &Config) -> candle_core::Result<Self> {
+        let dense = linear(config.hidden_size, config.hidden_size, vb.pp("dense"))?;
+        Ok(Self {
+            dense,
+            activation: |x| x.tanh(),
+        })
+    }
+
+    // https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L743
+    pub fn forward(&self, hidden_states: &Tensor) -> candle_core::Result<Tensor> {
+        let first_token_tensor = hidden_states.i((.., 0))?;
+        let pooled_output = self.dense.forward(&first_token_tensor)?;
+        let pooled_output = (self.activation)(&pooled_output)?;
+        Ok(pooled_output)
+    }
+}
+
+// https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L1623
+pub struct BertForSequenceClassification {
+    bert: BertModel,
+    pooler: BertPooler,
+    classifier: candle_nn::Linear,
+}
+
+impl BertForSequenceClassification {
+    // https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L1624
+    pub fn load(vb: VarBuilder, config: &Config) -> candle_core::Result<Self> {
+        let bert = BertModel::load(vb.pp("bert"), config)?;
+        let pooler = BertPooler::load(vb.pp("bert").pp("pooler"), config)?;
+        // num_labels 目前沒有支援多個 Label，故固定為 1
+        let classifier = candle_nn::linear(config.hidden_size, 1, vb.pp("classifier"))?;
+        Ok(Self {
+            bert,
+            pooler,
+            classifier,
+        })
+    }
+
+    // https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L1647
+    pub fn forward(
+        &self,
+        input_ids: &Tensor,
+        token_type_ids: &Tensor,
+        attention_mask: Option<&Tensor>,
+    ) -> candle_core::Result<Tensor> {
+        let sequence_output = self
+            .bert
+            .forward(input_ids, token_type_ids, attention_mask)?;
+
+        // https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L1155
+        let pooler = self.pooler.forward(&sequence_output)?;
+
+        // https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L1683
+        let logits = self.classifier.forward(&pooler)?;
+        Ok(logits)
     }
 }

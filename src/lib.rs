@@ -1,4 +1,4 @@
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use candle_core::utils::{cuda_is_available, metal_is_available};
 use candle_core::{DType, Device, Result, Shape, Tensor, WithDType};

@@ -16,12 +16,6 @@ features = tokenizer(
     ],
     padding=True, truncation=True, return_tensors="pt")
 
-
-
-print("input_ids", features.input_ids.shape)
-print("token_type_ids", features.token_type_ids.shape)
-print("attention_mask", features.attention_mask.shape)
-
 model.eval()
 with torch.no_grad():
     scores = model(**features).logits

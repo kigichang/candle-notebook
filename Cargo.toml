@@ -15,6 +15,7 @@ serde = { version = "1.0.215" }
 serde_json = "1.0.133"
 tokenizers = "0.21.0"
 anyhow = "1.0.93"
+tracing = "0.1.41"
 
 [package]
 name = "candle-notebook"
@@ -35,6 +36,7 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true, features = []}
 tokenizers = { workspace = true, features = ["http"]}
 anyhow = { workspace = true }
+tracing = { workspace = true }
 
 [dev-dependencies]
 crossterm = "0.28.1"
