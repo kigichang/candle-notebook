@@ -153,7 +153,7 @@ BertForSequenceClassification(
 
 ## 3. 實作
 
-實作時，可以直接將官方的檔案複製過來，先修正依賴 crate 錯誤的部分，讓程式可以正常運作。再來再實作 `BertPooler` 與 `classifier`。
+實作時，可以直接將官方的檔案複製過來，先修正依賴 crate 錯誤的部分，讓程式可以正常運作，再實作 `BertPooler` 與 `classifier`。
 
 ### 3.1 BertPooler
 
