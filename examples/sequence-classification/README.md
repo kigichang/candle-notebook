@@ -60,17 +60,17 @@ BertTokenizerFast(...)
 
 可以到 [https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-6-v2/tree/main](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-6-v2/tree/main) 查看官方提供的模型檔案。我們會需要：
 
-1. `config.json`: 模型的設定檔。
+1. __config.json__: 模型的設定檔。
 1. pytorch 或 safetensors 模型檔。
-1. `tokenizer.json`: tokenizer 的設定檔。
+1. __tokenizer.json__: tokenizer 的設定檔。
 
-從官網來看，缺少了 `tokenizer.json`。我們可以透過 Python 的範例程式，來產生 `tokenizer.json`。如下：
+從官網來看，缺少了 __tokenizer.json__。我們可以透過 Python 的範例程式，來產生 __tokenizer.json__。如下：
 
 ```python
 tokenizer.save_pretrained("tmp")
 ```
 
-這樣就會在 `tmp` 資料夾中產生 `tokenizer.json`, `special_tokens_map.json`, `vocab.txt` 三個檔案。如果模型檔案格式是舊版格式或者有 Shared Tensor 的話，可以參考我的 [bert-base-chinese](https://github.com/kigichang/candle-notebook/blob/main/examples/bert-base-chinese/README.md) 的說明來轉檔解決問題。
+這樣就會在 `tmp` 資料夾中產生 __tokenizer.json__, __special_tokens_map.json__, __vocab.txt__ 三個檔案。如果模型檔案格式是舊版格式或者有 Shared Tensor 的話，可以參考我的 [bert-base-chinese](https://github.com/kigichang/candle-notebook/blob/main/examples/bert-base-chinese/README.md) 的說明來轉檔解決問題。
 
 ### 2.2 模型結構
 
@@ -147,7 +147,7 @@ BertForSequenceClassification(
     (classifier): Linear(in_features=384, out_features=1, bias=True)
     ```
 
-因此需要去找 Pyhton 的 [`BertForSequenceClassification`](https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L1623) 的程式碼，來實作這兩個部分。
+因此需要去找 Pyhton 的 [`BertForSequenceClassification`](https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1623) 的程式碼，來實作這兩個部分。
 
 為什麼不用理會 `dropout`, Dropout 是訓練的時候會用到，在推論時不會用到，因此我們實作推論時，可以先不理會。
 
@@ -157,7 +157,7 @@ BertForSequenceClassification(
 
 ### 3.1 BertPooler
 
-transformers 的 [`BertPooler`](https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L737) 程式碼如下：
+transformers 的 [`BertPooler`](https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L737) 程式碼如下：
 
 ```python
 class BertPooler(nn.Module):
@@ -178,12 +178,12 @@ class BertPooler(nn.Module):
 它是一個很基本的神經網路，有一個線性轉換 `dense` 與 激活函數(`activation`) `Tanh`。我們可以用 `candle_nn::linear` 與 `tensor.tanh` 來實作。首先定義模型的結構如下：
 
 ```rust
-// https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L737
+// https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L737
 pub struct BertPooler {
     dense: Linear,
     activation: fn(&Tensor) -> candle_core::Result<Tensor>,
+    span: tracing::Span,
 }
-
 ```
 
 #### 3.1.1 BertPooler::load
@@ -200,12 +200,13 @@ pub struct BertPooler {
 ，與 Python 的程式碼，我們可以實作 `BertPooler::load` 函數如下：
 
 ```rust
-// https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L738
+// https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L738
 pub fn load(vb: VarBuilder, config: &Config) -> candle_core::Result<Self> {
     let dense = linear(config.hidden_size, config.hidden_size, vb.pp("dense"))?;
     Ok(Self {
         dense,
         activation: |x| x.tanh(),
+        span: tracing::span!(tracing::Level::TRACE, "pooler"),
     })
 }
 ```
@@ -215,8 +216,9 @@ pub fn load(vb: VarBuilder, config: &Config) -> candle_core::Result<Self> {
 依 transformers 的程式碼，對應到 Candle 的程式碼如下：
 
 ```rust
-// https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L743
+// https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L743
 pub fn forward(&self, hidden_states: &Tensor) -> candle_core::Result<Tensor> {
+    let _enter = self.span.enter();
     let first_token_tensor = hidden_states.i((.., 0))?;
     let pooled_output = self.dense.forward(&first_token_tensor)?;
     let pooled_output = (self.activation)(&pooled_output)?;
@@ -224,61 +226,232 @@ pub fn forward(&self, hidden_states: &Tensor) -> candle_core::Result<Tensor> {
 }
 ```
 
-### 3.2 實作 BertForSequenceClassification
+#### 3.1.3 BertPooler 總結
 
-由於 Candle Bert 並沒有完全實作 transformers 的 [BertModel](https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L957)，因此在對照 [`BertForSequenceClassification`](https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L1623) 會有困難，我們可以先參照 Candle Bert 內的 `BertForMaskedLM` 定義模型的結構如下：
+總結程式碼如下：
 
 ```rust
-// https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L1623
-pub struct BertForSequenceClassification {
-    bert: BertModel,
-    pooler: BertPooler,
-    classifier: candle_nn::Linear,
+// https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L737
+pub struct BertPooler {
+    dense: Linear,
+    activation: fn(&Tensor) -> candle_core::Result<Tensor>,
+    span: tracing::Span,
+}
+
+impl BertPooler {
+    // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L738
+    pub fn load(vb: VarBuilder, config: &Config) -> candle_core::Result<Self> {
+        let dense = linear(config.hidden_size, config.hidden_size, vb.pp("dense"))?;
+        Ok(Self {
+            dense,
+            activation: |x| x.tanh(),
+            span: tracing::span!(tracing::Level::TRACE, "pooler"),
+        })
+    }
+
+    // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L743
+    pub fn forward(&self, hidden_states: &Tensor) -> candle_core::Result<Tensor> {
+        let _enter = self.span.enter();
+        let first_token_tensor = hidden_states.i((.., 0))?.contiguous()?;
+        let pooled_output = self.dense.forward(&first_token_tensor)?;
+        let pooled_output = (self.activation)(&pooled_output)?;
+        Ok(pooled_output)
+    }
 }
 ```
 
-### 3.2.1 BertForSequenceClassification::load
+### 3.2 修改原本 Candle Bert 程式
 
-`BertForSequenceClassification::load` 會載入模型的設定檔，並建立模型的結構。我們可以參考 `BertForMaskedLM::load` 與上面的模型結構，來實作如下：
+接著修改原本 `BertModel` 程式碼，加入 `pooler` 層。由於 `pooler` 非必要，所以我們使用 `Option` 來處理。
 
 ```rust
-// https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L1624
-pub fn load(vb: VarBuilder, config: &Config) -> candle_core::Result<Self> {
-    let bert = BertModel::load(vb.pp("bert"), config)?;
-    let pooler = BertPooler::load(vb.pp("bert").pp("pooler"), config)?;
-    // num_labels 目前沒有支援多個 Label，故固定為 1
-    let classifier = candle_nn::linear(config.hidden_size, 1, vb.pp("classifier"))?;
+// https://github.com/huggingface/transformers/blob/6eedfa6dd15dc1e22a55ae036f681914e5a0d9a1/src/transformers/models/bert/modeling_bert.py#L874
+pub struct BertModel {
+    embeddings: BertEmbeddings,
+    encoder: BertEncoder,
+    pooler: Option<BertPooler>, // 加入 pooler 層
+    pub device: Device,
+    span: tracing::Span,
+}
+```
+
+#### 3.2.1 修改 BertModel::load
+
+在 `BertModel::load` 中，加載入 `BertPooler` 的程式碼
+
+```rust
+pub fn load(vb: VarBuilder, config: &Config) -> Result<Self> {
+    // 多載入 pooler 層
+    let (embeddings, encoder, pooler) = match (
+        BertEmbeddings::load(vb.pp("embeddings"), config),
+        BertEncoder::load(vb.pp("encoder"), config),
+        BertPooler::load(vb.pp("pooler"), config),
+    ) {
+        (Ok(embeddings), Ok(encoder), pooler) => (embeddings, encoder, pooler),
+        (Err(err), _, _) | (_, Err(err), _) => {
+            if let Some(model_type) = &config.model_type {
+                if let (Ok(embeddings), Ok(encoder), pooler) = (
+                    BertEmbeddings::load(vb.pp(format!("{model_type}.embeddings")), config),
+                    BertEncoder::load(vb.pp(format!("{model_type}.encoder")), config),
+                    BertPooler::load(vb.pp(format!("{model_type}.pooler")), config),
+                ) {
+                    (embeddings, encoder, pooler)
+                } else {
+                    return Err(err);
+                }
+            } else {
+                return Err(err);
+            }
+        }
+    };
     Ok(Self {
-        bert,
-        pooler,
-        classifier,
+        embeddings,
+        encoder,
+        pooler: pooler.ok(),
+        device: vb.device().clone(),
+        span: tracing::span!(tracing::Level::TRACE, "model"),
     })
 }
 ```
 
+#### 3.2.2 修改 BertModel::forward
+
+判斷是否有 `pooler` 層，如果有就加入 `pooler` 層的推論。
+
+```rust
+pub fn forward(
+    &self,
+    input_ids: &Tensor,
+    token_type_ids: &Tensor,
+    attention_mask: Option<&Tensor>,
+) -> Result<Tensor> {
+    let _enter = self.span.enter();
+    let embedding_output = self.embeddings.forward(input_ids, token_type_ids)?;
+    let attention_mask = match attention_mask {
+        Some(attention_mask) => attention_mask.clone(),
+        None => input_ids.ones_like()?,
+    };
+    // https://github.com/huggingface/transformers/blob/6eedfa6dd15dc1e22a55ae036f681914e5a0d9a1/src/transformers/models/bert/modeling_bert.py#L995
+    let attention_mask = get_extended_attention_mask(&attention_mask, DType::F32)?;
+    let sequence_output = self.encoder.forward(&embedding_output, &attention_mask)?;
+
+    // 加入 pooler 層推論
+    // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1155
+    let result = if let Some(ref pooler) = self.pooler {
+        pooler.forward(&sequence_output)?
+    } else {
+        sequence_output
+    };
+    Ok(result)
+}
+```
+
+#### 3.2.3 BertModel 總結
+
+```rust
+// https://github.com/huggingface/transformers/blob/6eedfa6dd15dc1e22a55ae036f681914e5a0d9a1/src/transformers/models/bert/modeling_bert.py#L874
+pub struct BertModel {
+    embeddings: BertEmbeddings,
+    encoder: BertEncoder,
+    pooler: Option<BertPooler>, // 加入 pooler 層
+    pub device: Device,
+    span: tracing::Span,
+}
+
+impl BertModel {
+    pub fn load(vb: VarBuilder, config: &Config) -> Result<Self> {
+        // 多載入 pooler 層
+        let (embeddings, encoder, pooler) = match (
+            BertEmbeddings::load(vb.pp("embeddings"), config),
+            BertEncoder::load(vb.pp("encoder"), config),
+            BertPooler::load(vb.pp("pooler"), config),
+        ) {
+            (Ok(embeddings), Ok(encoder), pooler) => (embeddings, encoder, pooler),
+            (Err(err), _, _) | (_, Err(err), _) => {
+                if let Some(model_type) = &config.model_type {
+                    if let (Ok(embeddings), Ok(encoder), pooler) = (
+                        BertEmbeddings::load(vb.pp(format!("{model_type}.embeddings")), config),
+                        BertEncoder::load(vb.pp(format!("{model_type}.encoder")), config),
+                        BertPooler::load(vb.pp(format!("{model_type}.pooler")), config),
+                    ) {
+                        (embeddings, encoder, pooler)
+                    } else {
+                        return Err(err);
+                    }
+                } else {
+                    return Err(err);
+                }
+            }
+        };
+        Ok(Self {
+            embeddings,
+            encoder,
+            pooler: pooler.ok(),
+            device: vb.device().clone(),
+            span: tracing::span!(tracing::Level::TRACE, "model"),
+        })
+    }
+
+    pub fn forward(
+        &self,
+        input_ids: &Tensor,
+        token_type_ids: &Tensor,
+        attention_mask: Option<&Tensor>,
+    ) -> Result<Tensor> {
+        let _enter = self.span.enter();
+        let embedding_output = self.embeddings.forward(input_ids, token_type_ids)?;
+        let attention_mask = match attention_mask {
+            Some(attention_mask) => attention_mask.clone(),
+            None => input_ids.ones_like()?,
+        };
+        // https://github.com/huggingface/transformers/blob/6eedfa6dd15dc1e22a55ae036f681914e5a0d9a1/src/transformers/models/bert/modeling_bert.py#L995
+        let attention_mask = get_extended_attention_mask(&attention_mask, DType::F32)?;
+        let sequence_output = self.encoder.forward(&embedding_output, &attention_mask)?;
+
+        // 加入 pooler 層推論
+        // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1155
+        let result = if let Some(ref pooler) = self.pooler {
+            pooler.forward(&sequence_output)?
+        } else {
+            sequence_output
+        };
+        Ok(result)
+    }
+}
+```
+
+### 3.3 實作 BertForSequenceClassification
+
+我們可以先參考 Candle Bert 內的 `BertForMaskedLM` 定義 `BertForSequenceClassification` 模型的結構如下：
+
+```rust
+// https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1623
+pub struct BertForSequenceClassification {
+    bert: BertModel,
+    classifier: candle_nn::Linear,
+}
+```
+
+#### 3.3.1 BertForSequenceClassification::load
+
+`BertForSequenceClassification::load` 會載入模型的設定檔，並建立模型的結構。我們可以參考 `BertForMaskedLM::load` 與上面的模型結構，來實作如下：
+
+```rust
+// https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1624
+pub fn load(vb: VarBuilder, config: &Config) -> candle_core::Result<Self> {
+    let bert = BertModel::load(vb.pp("bert"), config)?;
+    // num_labels 目前沒有支援多個 Label，故固定為 1
+    let classifier = candle_nn::linear(config.hidden_size, 1, vb.pp("classifier"))?;
+    Ok(Self { bert, classifier })
+}
+```
+
 1. `bert`: 載入 BertModel。
-1. `pooler`: 載入 BertPooler。需要注意的是，`BertPooler` 的 `load` 函數的參數是 `vb.pp("bert").pp("pooler")`，這是因為 `BertPooler` 是 `BertModel` 的一部分，所以要加上 `bert`。
 1. `classifier`: 載入 `Linear`，輸出的維度是 __1__，是因為我們只有一個 Label。
 
-### 3.2.2 BertForSequenceClassification::forward
+#### 3.3.2 BertForSequenceClassification::forward
 
-首先我們必須先了解 `BertModel` 的 `forward` 中，是如何執行 `pooler`，有關 `pooler` 的部分，如下：
-
-```rust
-sequence_output = encoder_outputs[0]
-pooled_output = self.pooler(sequence_output) if self.pooler is not None else None
-```
-
-對應到 Candle 的程式碼如下：
-
-```rust
-let sequence_output = self.bert.forward(input_ids, token_type_ids, attention_mask)?;
-
-// https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L1155
-let pooler = self.pooler.forward(&sequence_output)?;
-```
-
-在 Bert 層處理完後，接到 `classifier` 的 Python 程式碼如下：
+在 Bert 層處理完後，接到 `classifier` Python 程式碼如下：
 
 ```python
 pooled_output = outputs[1]
@@ -290,63 +463,66 @@ logits = self.classifier(pooled_output)
 由於推論不處理 `dropout`，所以對應到 Candle 的程式碼如下：
 
 ```rust
-// https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L1683
-let logits = self.classifier.forward(&pooler)?;
+// https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1647
+pub fn forward(
+    &self,
+    input_ids: &Tensor,
+    token_type_ids: &Tensor,
+    attention_mask: Option<&Tensor>,
+) -> candle_core::Result<Tensor> {
+    let pooler = self
+        .bert
+        .forward(input_ids, token_type_ids, attention_mask)?;
+
+    // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1683
+    let logits = self.classifier.forward(&pooler)?;
+    Ok(logits)
+}
 ```
 
-#### 3.2.3 BertForSequenceClassification 總結
+#### 3.3.3 BertForSequenceClassification 總結
 
 總結程式碼如下：
 
 ```rust
-
-// https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L1623
+// https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1623
 pub struct BertForSequenceClassification {
     bert: BertModel,
-    pooler: BertPooler,
     classifier: candle_nn::Linear,
 }
 
 impl BertForSequenceClassification {
-    // https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L1624
+    // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1624
     pub fn load(vb: VarBuilder, config: &Config) -> candle_core::Result<Self> {
         let bert = BertModel::load(vb.pp("bert"), config)?;
-        let pooler = BertPooler::load(vb.pp("bert").pp("pooler"), config)?;
         // num_labels 目前沒有支援多個 Label，故固定為 1
         let classifier = candle_nn::linear(config.hidden_size, 1, vb.pp("classifier"))?;
-        Ok(Self {
-            bert,
-            pooler,
-            classifier,
-        })
+        Ok(Self { bert, classifier })
     }
 
-    // https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L1647
+    // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1647
     pub fn forward(
         &self,
         input_ids: &Tensor,
         token_type_ids: &Tensor,
         attention_mask: Option<&Tensor>,
     ) -> candle_core::Result<Tensor> {
-        let sequence_output = self
+        let pooler = self
             .bert
             .forward(input_ids, token_type_ids, attention_mask)?;
 
-        // https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L1155
-        let pooler = self.pooler.forward(&sequence_output)?;
-
-        // https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L1683
+        // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1683
         let logits = self.classifier.forward(&pooler)?;
         Ok(logits)
     }
 }
 ```
 
-### 3.3 推論
+### 3.4 推論
 
 以上的程式準備好後，我們接下來就可以改寫 [test_seqence_classification.py](test_seqence_classification.py) 成 Rust 程式碼。
 
-#### 3.3.1 載入模型
+#### 3.4.1 載入模型
 
 如同先的範例程式，載入模型的程式碼如下：
 
@@ -369,7 +545,7 @@ let vb = VarBuilder::from_pth(bert, DType::F32, &device)?;
 let bert = BertForSequenceClassification::load(vb, &config)?;
 ```
 
-#### 3.3.2 載入 Tokenizer
+#### 3.4.2 載入 Tokenizer
 
 從本地端載入剛剛產生的 `tokenizer.json`。
 
@@ -383,7 +559,7 @@ let tokenizer = tokenizer.with_padding(Some(params));
 
 這邊與先前範例不同，由於比較的答句長度不同，所以我們需要加入 padding 設定，讓答句 token 的長度對齊一致。
 
-#### 3.3.3 輸入問句與答句
+#### 3.4.3 輸入問句與答句
 
 這邊需要注意的是，與 Python 輸入方式不同，需要將問句與答句合併成一組 tuple，再使用 encode_batch 方式來編碼。
 
@@ -401,10 +577,10 @@ let encoded = tokenizer.encode_batch(vec![
 ], true).map_err(E::msg)?;
 ```
 
-輸入的方式不同，主要是在 Python 中會將問句與答句 `zip` 起來，等同在 Rust 中，將問句與答句放在一個 tuple 中。這一段的處理程式在 [PreTrainedTokenizerBase._call_one](https://github.com/huggingface/transformers/blob/main/src/transformers/tokenization_utils_base.py#L2875)  如下：
+輸入的方式不同，主要是在 Python 中會將問句與答句 `zip` 起來，等同在 Rust 中，將問句與答句放在一個 tuple 中。這一段的處理程式在 [PreTrainedTokenizerBase._call_one](https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/tokenization_utils_base.py#L3036)  如下：
 
 ```python
-# https://github.com/huggingface/transformers/blob/main/src/transformers/tokenization_utils_base.py#L2947
+# https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/tokenization_utils_base.py#L3108
 batch_text_or_text_pairs = list(zip(text, text_pair)) if text_pair is not None else text
 return self.batch_encode_plus(
             batch_text_or_text_pairs=batch_text_or_text_pairs,
@@ -416,7 +592,7 @@ return self.batch_encode_plus(
 
 #### 3.3.4 推論
 
-取得 token 並進行Ｊ推論。
+取得 token 並進行推論。
 
 ```rust
 let ids = encoded
@@ -454,5 +630,6 @@ Ok([[8.845854], [-11.24556]])
 
 1. 如何產生 __tokenizer.json__。
 1. 如何解析預訓練模型結構。
-1. 如何對齊句字的 token 長度。
+1. 如何參考 Python transformers 程式碼，實作 Rust 程式碼。
+1. 如何對齊句子的 token 長度。
 1. 如何使用 __BertForSequenceClassification__。

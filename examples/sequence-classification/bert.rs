@@ -450,24 +450,28 @@ impl BertEncoder {
 pub struct BertModel {
     embeddings: BertEmbeddings,
     encoder: BertEncoder,
+    pooler: Option<BertPooler>, // 加入 pooler 層
     pub device: Device,
     span: tracing::Span,
 }
 
 impl BertModel {
     pub fn load(vb: VarBuilder, config: &Config) -> Result<Self> {
-        let (embeddings, encoder) = match (
+        // 多載入 pooler 層
+        let (embeddings, encoder, pooler) = match (
             BertEmbeddings::load(vb.pp("embeddings"), config),
             BertEncoder::load(vb.pp("encoder"), config),
+            BertPooler::load(vb.pp("pooler"), config),
         ) {
-            (Ok(embeddings), Ok(encoder)) => (embeddings, encoder),
-            (Err(err), _) | (_, Err(err)) => {
+            (Ok(embeddings), Ok(encoder), pooler) => (embeddings, encoder, pooler),
+            (Err(err), _, _) | (_, Err(err), _) => {
                 if let Some(model_type) = &config.model_type {
-                    if let (Ok(embeddings), Ok(encoder)) = (
+                    if let (Ok(embeddings), Ok(encoder), pooler) = (
                         BertEmbeddings::load(vb.pp(format!("{model_type}.embeddings")), config),
                         BertEncoder::load(vb.pp(format!("{model_type}.encoder")), config),
+                        BertPooler::load(vb.pp(format!("{model_type}.pooler")), config),
                     ) {
-                        (embeddings, encoder)
+                        (embeddings, encoder, pooler)
                     } else {
                         return Err(err);
                     }
@@ -479,6 +483,7 @@ impl BertModel {
         Ok(Self {
             embeddings,
             encoder,
+            pooler: pooler.ok(),
             device: vb.device().clone(),
             span: tracing::span!(tracing::Level::TRACE, "model"),
         })
@@ -499,7 +504,15 @@ impl BertModel {
         // https://github.com/huggingface/transformers/blob/6eedfa6dd15dc1e22a55ae036f681914e5a0d9a1/src/transformers/models/bert/modeling_bert.py#L995
         let attention_mask = get_extended_attention_mask(&attention_mask, DType::F32)?;
         let sequence_output = self.encoder.forward(&embedding_output, &attention_mask)?;
-        Ok(sequence_output)
+
+        // 加入 pooler 層推論
+        // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1155
+        let result = if let Some(ref pooler) = self.pooler {
+            pooler.forward(&sequence_output)?
+        } else {
+            sequence_output
+        };
+        Ok(result)
     }
 }
 
@@ -612,67 +625,63 @@ impl BertForMaskedLM {
     }
 }
 
-// https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L737
+// https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L737
 pub struct BertPooler {
     dense: Linear,
     activation: fn(&Tensor) -> candle_core::Result<Tensor>,
+    span: tracing::Span,
 }
 
 impl BertPooler {
-    // https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L738
+    // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L738
     pub fn load(vb: VarBuilder, config: &Config) -> candle_core::Result<Self> {
         let dense = linear(config.hidden_size, config.hidden_size, vb.pp("dense"))?;
         Ok(Self {
             dense,
             activation: |x| x.tanh(),
+            span: tracing::span!(tracing::Level::TRACE, "pooler"),
         })
     }
 
-    // https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L743
+    // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L743
     pub fn forward(&self, hidden_states: &Tensor) -> candle_core::Result<Tensor> {
-        let first_token_tensor = hidden_states.i((.., 0))?;
+        let _enter = self.span.enter();
+        // 記得要呼叫 contiguous，確認是否為 row-major，
+        // 否則在 accelerate 與 metal 會出錯。
+        let first_token_tensor = hidden_states.i((.., 0))?.contiguous()?;
         let pooled_output = self.dense.forward(&first_token_tensor)?;
         let pooled_output = (self.activation)(&pooled_output)?;
         Ok(pooled_output)
     }
 }
 
-// https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L1623
+// https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1623
 pub struct BertForSequenceClassification {
     bert: BertModel,
-    pooler: BertPooler,
     classifier: candle_nn::Linear,
 }
 
 impl BertForSequenceClassification {
-    // https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L1624
+    // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1624
     pub fn load(vb: VarBuilder, config: &Config) -> candle_core::Result<Self> {
         let bert = BertModel::load(vb.pp("bert"), config)?;
-        let pooler = BertPooler::load(vb.pp("bert").pp("pooler"), config)?;
         // num_labels 目前沒有支援多個 Label，故固定為 1
         let classifier = candle_nn::linear(config.hidden_size, 1, vb.pp("classifier"))?;
-        Ok(Self {
-            bert,
-            pooler,
-            classifier,
-        })
+        Ok(Self { bert, classifier })
     }
 
-    // https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L1647
+    // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1647
     pub fn forward(
         &self,
         input_ids: &Tensor,
         token_type_ids: &Tensor,
         attention_mask: Option<&Tensor>,
     ) -> candle_core::Result<Tensor> {
-        let sequence_output = self
+        let pooler = self
             .bert
             .forward(input_ids, token_type_ids, attention_mask)?;
 
-        // https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L1155
-        let pooler = self.pooler.forward(&sequence_output)?;
-
-        // https://github.com/huggingface/transformers/blob/main/src/transformers/models/bert/modeling_bert.py#L1683
+        // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1683
         let logits = self.classifier.forward(&pooler)?;
         Ok(logits)
     }
