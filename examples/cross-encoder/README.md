@@ -1,8 +1,10 @@
-# Sequence Classification
+# Cross Encoder
+
+實作 `BertForSequenceClassification`，並使用 `cross-encoder/ms-marco-MiniLM-L-6-v2` 模型來進行問句與答句的關聯度計算。
 
 ## 1. 模型介紹
 
-[cross-encoder/ms-marco-MiniLM-L-6-v2](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-6-v2) 是給一個問句，從多個句子中找出最相關的句子。通常用在 RAG (Retrieval Augmented Generation) 流程中，Reranking 的步驟。此模型會用到 __BertForSequenceClassification__。但目前 Candle 的 [bert.rs](https://github.com/huggingface/candle/blob/main/candle-transformers/src/models/bert.rs) 沒有實作 __BertForSequenceClassification__，所以延續官方的程式碼，自己實作一個。
+[cross-encoder/ms-marco-MiniLM-L-6-v2](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-6-v2) 是給一個問句，從多個句子中找出最相關的句子。通常用在 RAG (Retrieval Augmented Generation) 流程中，re-ranking 的步驟。此模型會用到 __BertForSequenceClassification__。但目前 Candle 的 [bert.rs](https://github.com/huggingface/candle/blob/main/candle-transformers/src/models/bert.rs) 沒有實作 __BertForSequenceClassification__，所以延續官方的程式碼，自己實作一個。
 
 範例最後的結果，要與模型官方網站的結果一致，我將官方的範例程式放在 [test_seqence_classification.py](test_seqence_classification.py)。
 
