@@ -4,9 +4,9 @@
 
 ## 1. 模型介紹
 
-[cross-encoder/ms-marco-MiniLM-L-6-v2](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-6-v2) 是給一個問句，從多個句子中找出最相關的句子。通常用在 RAG (Retrieval Augmented Generation) 流程中，re-ranking 的步驟。此模型會用到 __BertForSequenceClassification__。但目前 Candle 的 [bert.rs](https://github.com/huggingface/candle/blob/main/candle-transformers/src/models/bert.rs) 沒有實作 __BertForSequenceClassification__，所以延續官方的程式碼，自己實作一個。
+[cross-encoder/ms-marco-MiniLM-L-6-v2](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L-6-v2) 是給一個問句，再從多個答句中找出最相關的句子。通常用在 RAG (Retrieval Augmented Generation) 的 re-ranking 步驟。此模型會用到 __BertForSequenceClassification__。但目前 Candle 的 [bert.rs](https://github.com/huggingface/candle/blob/0.8.0/candle-transformers/src/models/bert.rs#L440) 沒有實作 __BertForSequenceClassification__，所以我們延用官方的程式碼，自己實作一個。
 
-範例最後的結果，要與模型官方網站的結果一致，我將官方的範例程式放在 [test_seqence_classification.py](test_seqence_classification.py)。
+範例最後的結果，要與官方網站的結果一致，我將官方的範例程式放在 [test_seqence_classification.py](test_seqence_classification.py)。
 
 ## 2. 實作
 
@@ -155,7 +155,7 @@ BertForSequenceClassification(
 
 ## 3. 實作
 
-實作時，可以直接將官方的檔案複製過來，先修正依賴 crate 錯誤的部分，讓程式可以正常運作，再實作 `BertPooler` 與 `classifier`。
+實作時，可以直接將 Candle 的 bert.rs 檔案複製過來，先修正依賴 crate 錯誤的部分，讓程式可以正常運作，再實作 `BertPooler` 與 `classifier`。
 
 ### 3.1 BertPooler
 
@@ -221,7 +221,9 @@ pub fn load(vb: VarBuilder, config: &Config) -> candle_core::Result<Self> {
 // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L743
 pub fn forward(&self, hidden_states: &Tensor) -> candle_core::Result<Tensor> {
     let _enter = self.span.enter();
-    let first_token_tensor = hidden_states.i((.., 0))?;
+    // 記得要呼叫 contiguous，確認是否為 row-major，
+    // 否則在 accelerate 與 metal 會出錯。
+    let first_token_tensor = hidden_states.i((.., 0))?.contiguous()?;
     let pooled_output = self.dense.forward(&first_token_tensor)?;
     let pooled_output = (self.activation)(&pooled_output)?;
     Ok(pooled_output)
@@ -254,6 +256,8 @@ impl BertPooler {
     // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L743
     pub fn forward(&self, hidden_states: &Tensor) -> candle_core::Result<Tensor> {
         let _enter = self.span.enter();
+        // 記得要呼叫 contiguous，確認是否為 row-major，
+        // 否則在 accelerate 與 metal 會出錯。
         let first_token_tensor = hidden_states.i((.., 0))?.contiguous()?;
         let pooled_output = self.dense.forward(&first_token_tensor)?;
         let pooled_output = (self.activation)(&pooled_output)?;
