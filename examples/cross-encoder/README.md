@@ -151,8 +151,6 @@ BertForSequenceClassification(
 
 因此需要去找 Pyhton 的 [`BertForSequenceClassification`](https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1623) 的程式碼，來實作這兩個部分。
 
-為什麼不用理會 `dropout`, Dropout 是訓練的時候會用到，在推論時不會用到，因此我們實作推論時，可以先不理會。
-
 ## 3. 實作
 
 實作時，可以直接將 Candle 的 bert.rs 檔案複製過來，先修正依賴 crate 錯誤的部分，讓程式可以正常運作，再實作 `BertPooler` 與 `classifier`。
@@ -434,6 +432,7 @@ impl BertModel {
 // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1623
 pub struct BertForSequenceClassification {
     bert: BertModel,
+    dropout: Dropout,
     classifier: candle_nn::Linear,
 }
 ```
@@ -446,18 +445,28 @@ pub struct BertForSequenceClassification {
 // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1624
 pub fn load(vb: VarBuilder, config: &Config) -> candle_core::Result<Self> {
     let bert = BertModel::load(vb.pp("bert"), config)?;
+    let dropout = Dropout::new(if let Some(pr) = config.classifier_dropout {
+        pr
+    } else {
+        config.hidden_dropout_prob
+    });
     // num_labels 目前沒有支援多個 Label，故固定為 1
     let classifier = candle_nn::linear(config.hidden_size, 1, vb.pp("classifier"))?;
-    Ok(Self { bert, classifier })
+    Ok(Self {
+        bert,
+        dropout,
+        classifier,
+    })
 }
 ```
 
 1. `bert`: 載入 BertModel。
+1. `dropout`: 載入 `Dropout`，輸入的機率是 __config.classifier_dropout__，如果沒有設定，就使用 __config.hidden_dropout_prob__。
 1. `classifier`: 載入 `Linear`，輸出的維度是 __1__，是因為我們只有一個 Label。
 
 #### 3.3.2 BertForSequenceClassification::forward
 
-在 Bert 層處理完後，接到 `classifier` Python 程式碼如下：
+在 Bert 層處理完後，接到 `dropout` 與 `classifier` Python 程式碼如下：
 
 ```python
 pooled_output = outputs[1]
@@ -466,7 +475,7 @@ pooled_output = self.dropout(pooled_output)
 logits = self.classifier(pooled_output)
 ```
 
-由於推論不處理 `dropout`，所以對應到 Candle 的程式碼如下：
+對應 Rust 程式碼如下：
 
 ```rust
 // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1647
@@ -476,13 +485,36 @@ pub fn forward(
     token_type_ids: &Tensor,
     attention_mask: Option<&Tensor>,
 ) -> candle_core::Result<Tensor> {
-    let pooler = self
+    let output = self
         .bert
         .forward(input_ids, token_type_ids, attention_mask)?;
 
-    // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1683
-    let logits = self.classifier.forward(&pooler)?;
+    // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1682
+    let pooled_output = self.dropout.forward(&output)?;
+    let logits = self.classifier.forward(&pooled_output)?;
     Ok(logits)
+}
+```
+
+其實在推論時，不會使用 `dropout`。因此原本 bert.rs 內的 Dropout 是直接回傳輸入的 Tensor。
+
+```rust
+struct Dropout {
+    #[allow(dead_code)]
+    pr: f64,
+}
+
+impl Dropout {
+    fn new(pr: f64) -> Self {
+        Self { pr }
+    }
+}
+
+impl Module for Dropout {
+    fn forward(&self, x: &Tensor) -> Result<Tensor> {
+        // TODO
+        Ok(x.clone())
+    }
 }
 ```
 
@@ -494,6 +526,7 @@ pub fn forward(
 // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1623
 pub struct BertForSequenceClassification {
     bert: BertModel,
+    dropout: Dropout,
     classifier: candle_nn::Linear,
 }
 
@@ -501,9 +534,18 @@ impl BertForSequenceClassification {
     // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1624
     pub fn load(vb: VarBuilder, config: &Config) -> candle_core::Result<Self> {
         let bert = BertModel::load(vb.pp("bert"), config)?;
+        let dropout = Dropout::new(if let Some(pr) = config.classifier_dropout {
+            pr
+        } else {
+            config.hidden_dropout_prob
+        });
         // num_labels 目前沒有支援多個 Label，故固定為 1
         let classifier = candle_nn::linear(config.hidden_size, 1, vb.pp("classifier"))?;
-        Ok(Self { bert, classifier })
+        Ok(Self {
+            bert,
+            dropout,
+            classifier,
+        })
     }
 
     // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1647
@@ -513,12 +555,13 @@ impl BertForSequenceClassification {
         token_type_ids: &Tensor,
         attention_mask: Option<&Tensor>,
     ) -> candle_core::Result<Tensor> {
-        let pooler = self
+        let output = self
             .bert
             .forward(input_ids, token_type_ids, attention_mask)?;
 
-        // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1683
-        let logits = self.classifier.forward(&pooler)?;
+        // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1682
+        let pooled_output = self.dropout.forward(&output)?;
+        let logits = self.classifier.forward(&pooled_output)?;
         Ok(logits)
     }
 }

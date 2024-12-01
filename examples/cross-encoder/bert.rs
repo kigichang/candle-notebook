@@ -658,6 +658,7 @@ impl BertPooler {
 // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1623
 pub struct BertForSequenceClassification {
     bert: BertModel,
+    dropout: Dropout,
     classifier: candle_nn::Linear,
 }
 
@@ -665,9 +666,18 @@ impl BertForSequenceClassification {
     // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1624
     pub fn load(vb: VarBuilder, config: &Config) -> candle_core::Result<Self> {
         let bert = BertModel::load(vb.pp("bert"), config)?;
+        let dropout = Dropout::new(if let Some(pr) = config.classifier_dropout {
+            pr
+        } else {
+            config.hidden_dropout_prob
+        });
         // num_labels 目前沒有支援多個 Label，故固定為 1
         let classifier = candle_nn::linear(config.hidden_size, 1, vb.pp("classifier"))?;
-        Ok(Self { bert, classifier })
+        Ok(Self {
+            bert,
+            dropout,
+            classifier,
+        })
     }
 
     // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1647
@@ -677,12 +687,13 @@ impl BertForSequenceClassification {
         token_type_ids: &Tensor,
         attention_mask: Option<&Tensor>,
     ) -> candle_core::Result<Tensor> {
-        let pooler = self
+        let output = self
             .bert
             .forward(input_ids, token_type_ids, attention_mask)?;
 
-        // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1683
-        let logits = self.classifier.forward(&pooler)?;
+        // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1682
+        let pooled_output = self.dropout.forward(&output)?;
+        let logits = self.classifier.forward(&pooled_output)?;
         Ok(logits)
     }
 }
