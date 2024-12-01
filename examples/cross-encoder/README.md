@@ -669,7 +669,7 @@ println!("{:?}", result.to_vec2::<f32>());
 執行
 
 ```shell
-$ cargo run --release --example sequence-classification
+$ cargo run --release --example cross-encoder 
 Ok([[8.845854], [-11.24556]])
 ```
 
