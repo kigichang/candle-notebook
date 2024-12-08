@@ -18,7 +18,7 @@ serde_json = "1.0.133"
 tokenizers = "0.21.0"
 anyhow = "1.0.94"
 tracing = "0.1.41"
-macross = {git = "https://github.com/kigichang/macross", branch = "main"}
+macross = {git = "https://github.com/kigichang/macross", commit = "3e06d8bdf0c3ee6a4499571d7ca2d8ec4796d4f8"}
 
 [package]
 name = "candle-notebook"
