@@ -12,6 +12,7 @@ import torch.nn.functional as nn
 # 我的修正模型
 tokenizer = AutoTokenizer.from_pretrained("bert-base-chinese")
 model = AutoModelForMaskedLM.from_pretrained("bert-base-chinese")
+print(model)
 
 # 中研院模型
 # tokenizer = BertTokenizerFast.from_pretrained('bert-base-chinese')

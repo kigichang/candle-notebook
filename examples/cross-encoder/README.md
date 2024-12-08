@@ -8,7 +8,7 @@
 
 範例最後的結果，要與官方網站的結果一致，我將官方的範例程式放在 [test_seqence_classification.py](test_seqence_classification.py)。
 
-## 2. 實作
+## 2. 官方範例
 
 ### 2.1 官方範例程式與模型檔案
 

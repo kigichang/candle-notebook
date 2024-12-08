@@ -29,6 +29,8 @@
 1. [bert-base-chinese](examples/bert-base-chinese/README.md): 使用 [google-bert/bert-base-chinese](https://huggingface.co/google-bert/bert-base-chinese)，展示如何使用 Huggingface 上的預訓練模型。
 1. [Candle meet Yew](examples/candle-meet-yew/README.md): 如何在瀏覽器上使用預訓練模型。
 1. [Cross Encoder](examples/cross-encoder/README.md): 透過實作 `BertForSequenceClassification` 學習如何擴充 Candle 的功能與可能會遇到的問題。
+1. [Sentence Transforms - All-MiniLM-L6-v2](examples/all-minilm-l6-v2/README.md): 實作 [sentence-transformers/all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2)
+1. *[Sentence Transforms - Sentence Transformers](examples/sentence-transformers/README.md): 實作 [Alibaba-NLP/gte-multilingual-base](https://huggingface.co/Alibaba-NLP/gte-multilingual-base)
 1. *[crf](examples/crf/README.md): 分享怎麼把 [Pytorch 版的 Conditional Random Field (CRF)](https://github.com/kmkurn/pytorch-crf) 移植到 Candle 上。
 1. *[rnn](examples/rnn/README.md): 以 LSTM 為例，講解如何擴充 Candle 的功能。
 1. *[CheatSheet](cheatsheet.md) 快速查詢指南。
