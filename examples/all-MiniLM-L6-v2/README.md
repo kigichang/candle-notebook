@@ -1,8 +1,8 @@
 # Sentence Transforms - All-MiniLM-L6-v2
 
-Text Embedding 是將句子或文章對應到指定長度的向量空間上，用來計算句子或文章之間的相似度，也是 RAG 的第一個步驟。這裡我們使用 [sentence-transformers/all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) 來實作 Text Embedding。
+Text Embedding 是將句子或文章對應到指定長度的向量空間上，用來計算句子或文章之間的相似度，也是 RAG 的第一個步驟。這個範例我們實作 [sentence-transformers/all-MiniLM-L6-v2](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) 來實現 Text Embedding。
 
-Huggingface 有提供 [huggingface 的 text-embeddings-inference](https://github.com/huggingface/text-embeddings-inference)，也是用 Rust 實作，但 text-embeddings-inference 用的不是官方版本的 Candle。
+Huggingface 的 [text-embeddings-inference](https://github.com/huggingface/text-embeddings-inference)，提供常用的 Text Embedding 模型，可以自行架設服務。這個範例也有參考裏面的實作，需注意的是 text-embeddings-inference 用的不是官方版本的 Candle。
 
 ## 1. 模型介紹
 
