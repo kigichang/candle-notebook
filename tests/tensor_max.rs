@@ -76,5 +76,7 @@ fn max() -> Result<()> {
     let v2 = v2.unsqueeze(2)?; // (2, 3) -> (2, 3, 1)
     assert_eq!(max2_keepdim.to_vec3::<f32>()?, v2.to_vec3::<f32>()?);
 
+    let max_all = t.max_all()?;
+    assert_eq!(max_all.to_scalar::<f32>()?, 23.);
     Ok(())
 }

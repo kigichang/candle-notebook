@@ -78,5 +78,7 @@ fn min() -> Result<()> {
     let v2 = v2.unsqueeze(2)?; // (2, 3) -> (2, 3, 1)
     assert_eq!(min2_keepdim.to_vec3::<f32>()?, v2.to_vec3::<f32>()?);
 
+    let min_all = t.min_all()?;
+    assert_eq!(min_all.to_scalar::<f32>()?, 0.0f32);
     Ok(())
 }
