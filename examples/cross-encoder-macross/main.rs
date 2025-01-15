@@ -50,7 +50,7 @@ fn main() -> Result<()> {
     // println!("ids: {:?}", ids);
     // println!("type_ids: {:?}", type_ids);
     // println!("attention_mask: {:?}", attention_mask);
-    let result = bert.forward(&ids, &type_ids, Some(&attention_mask))?;
+    let result = bert.forward(&ids, &type_ids, &attention_mask)?;
 
     // println!("{:?}", result);
     println!("{:?}", result.to_vec2::<f32>());

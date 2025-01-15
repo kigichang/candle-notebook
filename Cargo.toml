@@ -6,19 +6,19 @@ members = [
 [workspace.dependencies]
 accelerate-src = { version = "0.3.2"}
 bindgen_cuda = { version = "0.1.5"}
-candle-core = "0.8.1"
-candle-datasets = "0.8.1"
-candle-nn = "0.8.1"
-candle-transformers = "0.8.1"
+candle-core = "0.8.2"
+candle-datasets = "0.8.2"
+candle-nn = "0.8.2"
+candle-transformers = "0.8.2"
 half = "2.4.1"
-hf-hub = "0.3.2"
+hf-hub = "0.4.1"
 intel-mkl-src = { version = "0.8.1"}
-serde = { version = "1.0.216" }
-serde_json = "1.0.133"
+serde = { version = "1.0.217" }
+serde_json = "1.0.135"
 tokenizers = "0.21.0"
-anyhow = "1.0.94"
+anyhow = "1.0.95"
 tracing = "0.1.41"
-macross = {git = "https://github.com/kigichang/macross", commit = "3e06d8bdf0c3ee6a4499571d7ca2d8ec4796d4f8"}
+macross = { path = "../macross" }
 
 [package]
 name = "candle-notebook"
@@ -45,9 +45,9 @@ tracing = { workspace = true }
 crossterm = "0.28.1"
 ratatui = "0.29.0"
 color-eyre = "0.6.3"
-clap = { version = "4.5.23", features = ["derive"] }
+clap = { version = "4.5.26", features = ["derive"] }
 rand = "0.8.5"
-macross= {workspace = true}
+macross = { workspace = true}
 
 [features]
 default = []

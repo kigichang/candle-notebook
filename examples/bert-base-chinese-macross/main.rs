@@ -49,7 +49,7 @@ fn main() -> Result<()> {
         let input_ids = Tensor::stack(&[Tensor::new(ids.get_ids(), &device)?], 0)?;
         let token_type_ids = Tensor::stack(&[Tensor::new(ids.get_type_ids(), &device)?], 0)?;
         let attention_mask = Tensor::stack(&[Tensor::new(ids.get_attention_mask(), &device)?], 0)?;
-        let result = bert.forward(&input_ids, &token_type_ids, Some(&attention_mask))?;
+        let result = bert.forward(&input_ids, &token_type_ids, &attention_mask)?;
 
         let mask_idx = ids.get_ids().iter().position(|&x| x == mask_id).unwrap();
         let mask_token_logits = result.i((0, mask_idx, ..))?;
