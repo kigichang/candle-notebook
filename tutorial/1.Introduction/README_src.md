@@ -12,15 +12,15 @@ export_on_save:
 
 ## Huggingface Candle 簡介
 
-- 2023/09 月很低調的公開
-- 以 Rust 開發 Pytorch 上的功能
-- 以 Rust 開發 Python Transformers 支援 Model
-- 以 Rust 支援 Onnx ~(我還沒試)~
-- 支援 Cuda, Apple [Accelerate](https://developer.apple.com/documentation/accelerate)/[MLX](https://ml-explore.github.io/mlx/build/html/index.html), Intel MKL ~(似乎被放棄了)~
-- 因為用 Rust 開發，支援跨平台，包含 WASM
-  - WASM 目前只支援 CPU SIMD，不支援 WebNN 與 WebGPU
-  - WebGPU 有分支: [https://github.com/KimHenrikOtte/candle/tree/wgpu_cleanup](https://github.com/KimHenrikOtte/candle/tree/wgpu_cleanup)
-  - Huggingface 另一個 WebGPU 框架: [https://github.com/huggingface/ratchet](https://github.com/huggingface/ratchet)
+- 2023/09 月很低調的公開。
+- 以 Rust 開發 Pytorch 上的功能。
+- 以 Rust 開發 Python Transformers 支援 Model。
+- 以 Rust 支援 Onnx ~(我還沒試過)~。
+- 支援 Cuda, Apple [Accelerate](https://developer.apple.com/documentation/accelerate)/[MLX](https://ml-explore.github.io/mlx/build/html/index.html), [Intel MKL](https://github.com/rust-math/intel-mkl-src) ~(似乎被放棄了)~。
+- 因為用 Rust 開發，支援跨平台，包含 WASM。
+  - WASM 目前只支援 CPU SIMD，不支援 WebNN 與 WebGPU。
+  - WebGPU 有分支: [https://github.com/KimHenrikOtte/candle/tree/wgpu_cleanup](https://github.com/KimHenrikOtte/candle/tree/wgpu_cleanup)。
+  - Huggingface 另一個 WebGPU 框架: [https://github.com/huggingface/ratchet](https://github.com/huggingface/ratchet)。
 
 ## Why should I use Candle?
 
@@ -58,7 +58,7 @@ FROM: [https://github.com/huggingface/candle?tab=readme-ov-file#why-should-i-use
   - 對標: [Open AI tiktoken](https://github.com/openai/tiktoken) (也是用 Rust 實作)
   - 在 hub 上的檔案是 tokenizer.json.
     - ex: [https://huggingface.co/google-bert/bert-base-chinese/blob/main/tokenizer.json](https://huggingface.co/google-bert/bert-base-chinese/blob/main/tokenizer.json)
-    - 如果沒有這個檔，可以利用 Python 程式，來匯出 ~(比較快)~。
+    - 如果沒有這個檔，可以利用 Python 程式，來匯出。
 
 ## 自 Huggingface Hub 下載模型
 
