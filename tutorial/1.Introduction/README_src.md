@@ -15,8 +15,8 @@ export_on_save:
 - 2023/09 月很低調的公開。
 - 以 Rust 開發 Pytorch 上的功能。
 - 以 Rust 開發 Python Transformers 支援 Model。
-- 以 Rust 支援 Onnx ~(我還沒試過)~。
-- 支援 Cuda, Apple [Accelerate](https://developer.apple.com/documentation/accelerate)/[MLX](https://ml-explore.github.io/mlx/build/html/index.html), [Intel MKL](https://github.com/rust-math/intel-mkl-src) ~(似乎被放棄了)~。
+- 以 Rust 支援 Onnx <sub>(我還沒試過)</sub>。
+- 支援 Cuda, Apple [Accelerate](https://developer.apple.com/documentation/accelerate)/[MLX](https://ml-explore.github.io/mlx/build/html/index.html), [Intel MKL](https://github.com/rust-math/intel-mkl-src) <sub>(似乎被放棄了)</sub>。
 - 因為用 Rust 開發，支援跨平台，包含 WASM。
   - WASM 目前只支援 CPU SIMD，不支援 WebNN 與 WebGPU。
   - WebGPU 有分支: [https://github.com/KimHenrikOtte/candle/tree/wgpu_cleanup](https://github.com/KimHenrikOtte/candle/tree/wgpu_cleanup)。
