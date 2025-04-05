@@ -27,3 +27,6 @@ Cargo.lock
 *.safetensors
 *.pth
 tmp
+breeze_models
+modules
+hub
