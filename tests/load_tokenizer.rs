@@ -60,11 +60,9 @@
 
 use anyhow::{Error as E, Result};
 use serde::Deserialize;
-use tokenizers::decoders::bpe;
-use tokenizers::models::bpe::{BpeBuilder, BPE};
 use tokenizers::models::wordpiece::WordPiece;
 use tokenizers::tokenizer::AddedToken;
-use tokenizers::{Tokenizer, TokenizerBuilder};
+use tokenizers::Tokenizer;
 
 // Define a struct to parse the special tokens map
 #[derive(Deserialize, Debug)]
@@ -80,7 +78,7 @@ struct SpecialTokensMap {
 fn load_tokenizer() -> Result<()> {
     let vocab_file = "/Users/kigi/.cache/huggingface/hub/models--cross-encoder--ms-marco-MiniLM-L-6-v2/snapshots/b2cfda50a1a9fc7919e7444afbb52610d268af92/vocab.txt";
     let special_tokens_map_file = "/Users/kigi/.cache/huggingface/hub/models--cross-encoder--ms-marco-MiniLM-L-6-v2/snapshots/b2cfda50a1a9fc7919e7444afbb52610d268af92/special_tokens_map.json";
-    let tokenizer_config_file = "/Users/kigi/.cache/huggingface/hub/models--cross-encoder--ms-marco-MiniLM-L-6-v2/snapshots/b2cfda50a1a9fc7919e7444afbb52610d268af92/tokenizer_config.json";
+    let _tokenizer_config_file = "/Users/kigi/.cache/huggingface/hub/models--cross-encoder--ms-marco-MiniLM-L-6-v2/snapshots/b2cfda50a1a9fc7919e7444afbb52610d268af92/tokenizer_config.json";
 
     let word_piece_builder = WordPiece::from_file(vocab_file);
     let word_piece = word_piece_builder

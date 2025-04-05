@@ -6,6 +6,15 @@
 
 由於 Candle 還在開發中，我也會隨著它的更新，持續調整筆記內容。
 
+## Pyhton Virtual Environment
+
+使用 [uv](https://github.com/astral-sh/uv) 來建立 Python Virtual Environment。
+
+```bash
+uv venv candle-nb --python 3.12 --seed # 建立虛擬環境
+source candle-nb/bin/activate # 啟動虛擬環境
+```
+
 ## 筆記內容 (持續更新中)
 
 1. [matrix-op](examples/matrix-op/README.md): 透過 2D 繪圖，學習 Candle 的基本操作。

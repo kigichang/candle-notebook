@@ -25,6 +25,14 @@ name = "candle-notebook"
 version = "0.1.0"
 edition = "2021"
 
+[[bin]]
+name = "candle-ex1"
+path = "tutorial/1.Introduction/main.rs"
+
+
+
+
+
 [dependencies]
 accelerate-src = { workspace = true, optional = true }
 bindgen_cuda = { workspace = true, optional = true }

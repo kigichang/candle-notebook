@@ -33,7 +33,7 @@ fn gen_index<S: Into<Shape>>(len: u32, shape: S) -> Result<Tensor> {
     }
 
     let mut values = vec![0u32; total];
-    rand::thread_rng().fill(&mut values[..]);
+    rand::rng().fill(&mut values[..]);
     Tensor::from_vec(
         values.into_iter().map(|v| v % len).collect::<Vec<u32>>(),
         shape,
