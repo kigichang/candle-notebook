@@ -1,4 +1,5 @@
 use candle_core::{DType, Device, IndexOp, Result, Tensor};
+use rand::Rng;
 
 // TensorIndexer
 // pub enum TensorIndexer {
@@ -17,8 +18,10 @@ fn indexer_select() -> Result<()> {
     let dims = t.dims();
     let v = t.to_vec3::<f32>()?;
 
+    let mut rng = rand::rng();
+
     // dim0
-    let idx0 = rand::random::<usize>() % dims[0];
+    let idx0 = rng.random_range(0..dims[0]);
     let choose = t.i(idx0)?;
     println!("{}", choose.is_contiguous());
     assert_eq!(choose.dims(), &[dims[1], dims[2]]);
@@ -34,7 +37,7 @@ fn indexer_select() -> Result<()> {
     assert_eq!(choose.to_vec2::<f32>()?, choose_narrow.to_vec2::<f32>()?);
 
     // (dim0, dim1)
-    let idx1 = rand::random::<usize>() % dims[1];
+    let idx1 = rng.random_range(0..dims[1]);
     let choose = t.i((idx0, idx1))?;
     println!("{}", choose.is_contiguous());
     assert_eq!(choose.dims(), &[dims[2]]);
@@ -48,7 +51,7 @@ fn indexer_select() -> Result<()> {
     assert_eq!(choose.to_vec1::<f32>()?, choose_narrow.to_vec1::<f32>()?);
 
     // (dim0, dim1, dim2)
-    let idx2 = rand::random::<usize>() % dims[2];
+    let idx2 = rng.random_range(0..dims[2]);
     let choose = t.i((idx0, idx1, idx2))?;
     println!("{}", choose.is_contiguous());
     assert_eq!(choose.shape(), &().into());
@@ -76,7 +79,7 @@ fn indexer_narrow() -> Result<()> {
     let v = t.to_vec3::<f32>()?;
 
     // dim0
-    let idx0 = rand::random::<usize>() % dims[0];
+    let idx0 = rand::random_range(0..dims[0]);
     let choose = t.i(0..=idx0)?;
     println!("{}", choose.is_contiguous());
     assert_eq!(choose.dims(), &[idx0 + 1, dims[1], dims[2]]);
@@ -90,7 +93,7 @@ fn indexer_narrow() -> Result<()> {
     assert_eq!(choose.to_vec3::<f32>()?, choose_narrow.to_vec3::<f32>()?);
 
     // dim1
-    let idx1 = rand::random::<usize>() % dims[1];
+    let idx1 = rand::random_range(0..dims[1]);
     let choose = t.i((0..=idx0, 0..=idx1))?;
     assert_eq!(choose.dims(), &[idx0 + 1, idx1 + 1, dims[2]]);
     let choose = if !choose.is_contiguous() {
@@ -124,7 +127,7 @@ fn indexer_narrow() -> Result<()> {
     assert_eq!(choose.to_vec3::<f32>()?, choose_v);
 
     // dim2
-    let idx2 = rand::random::<usize>() % dims[2];
+    let idx2 = rand::random_range(0..dims[2]);
     let choose = t.i((0..=idx0, 0..=idx1, 0..=idx2))?.contiguous()?;
     assert_eq!(choose.dims(), &[idx0 + 1, idx1 + 1, idx2 + 1]);
     let mut choose_v = vec![];
@@ -248,10 +251,10 @@ fn index() -> Result<()> {
     let dims = t.dims();
     let v = t.to_vec3::<f32>()?;
 
-    let idx0 = rand::random::<usize>() % dims[0];
+    let idx0 = rand::random_range(0..dims[0]);
     let idx1 =
         Tensor::rand(0f32, dims[1] as f32, dims[1] / 2, &Device::Cpu)?.to_dtype(DType::U32)?;
-    let idx2 = rand::random::<usize>() % dims[2];
+    let idx2 = rand::random_range(0..dims[2]);
 
     // 最後一維如果是 Select(usize) 則會被消除。
     // 因為 Select(usize) 最後回傳時，會做 squeeze(0)。

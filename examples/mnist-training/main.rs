@@ -165,7 +165,7 @@ fn training_loop_cnn<M: Model>(
     let mut batch_idxs = (0..n_batches).collect::<Vec<usize>>();
     for epoch in 1..args.epochs {
         let mut sum_loss = 0f32;
-        batch_idxs.shuffle(&mut thread_rng());
+        batch_idxs.shuffle(&mut rand::rng());
         for batch_idx in batch_idxs.iter() {
             let train_images = train_images.narrow(0, batch_idx * BSIZE, BSIZE)?;
             let train_labels = train_labels.narrow(0, batch_idx * BSIZE, BSIZE)?;

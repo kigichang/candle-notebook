@@ -6,17 +6,17 @@ members = [
 [workspace.dependencies]
 accelerate-src = { version = "0.3.2"}
 bindgen_cuda = { version = "0.1.5"}
-candle-core = "0.8.2"
-candle-datasets = "0.8.2"
-candle-nn = "0.8.2"
-candle-transformers = "0.8.2"
-half = "2.4.1"
-hf-hub = "0.4.1"
+candle-core = "0.8.4"
+candle-datasets = "0.8.4"
+candle-nn = "0.8.4"
+candle-transformers = "0.8.4"
+half = "2.5.0"
+hf-hub = "0.4.2"
 intel-mkl-src = { version = "0.8.1"}
-serde = { version = "1.0.217" }
-serde_json = "1.0.135"
-tokenizers = "0.21.0"
-anyhow = "1.0.95"
+serde = { version = "1.0.219" }
+serde_json = "1.0.140"
+tokenizers = "0.21.1"
+anyhow = "1.0.97"
 tracing = "0.1.41"
 macross = { path = "../macross" }
 
@@ -45,8 +45,8 @@ tracing = { workspace = true }
 crossterm = "0.28.1"
 ratatui = "0.29.0"
 color-eyre = "0.6.3"
-clap = { version = "4.5.26", features = ["derive"] }
-rand = "0.8.5"
+clap = { version = "4.5.35", features = ["derive"] }
+rand = "0.9.0"
 macross = { workspace = true}
 
 [features]
@@ -55,5 +55,3 @@ accelerate = ["dep:accelerate-src", "candle-core/accelerate", "candle-nn/acceler
 cuda = ["candle-core/cuda", "candle-nn/cuda", "dep:bindgen_cuda"]
 mkl = ["dep:intel-mkl-src", "candle-core/mkl", "candle-nn/mkl"]
 metal = ["candle-core/metal", "candle-nn/metal"]
-
-
