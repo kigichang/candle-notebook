@@ -1,6 +1,6 @@
 # Huggingface Candle 簡易版說明
 
-- Introduction: 簡介與可能遇到的問題修正
+- [1.Introduction](1.Introduction/README.md): 簡介與可能遇到的問題修正
 
 ## 工具
 

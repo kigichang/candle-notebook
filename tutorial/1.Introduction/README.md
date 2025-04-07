@@ -57,21 +57,33 @@ FROM: [https://github.com/huggingface/candle?tab=readme-ov-file#why-should-i-use
   
 ```rust
 use anyhow::Result;
-use hf_hub::{api::sync::Api, Repo, RepoType};
+use hf_hub::{api::sync::ApiBuilder, Repo, RepoType};
   
 fn main() -> Result<()> {
-    let default_model = "google-bert/bert-base-chinese".to_owned();
-    let default_revision = "main".to_owned();
+    let default_model = "google-bert/bert-base-chinese".to_owned(); // 指定模型名稱。
+    let default_revision = "main".to_owned(); // 指定版本。
     let repo = Repo::with_revision(default_model, RepoType::Model, default_revision);
   
-    let (config_filename, tokenizer_filename, model_filename) = {
-        let api = Api::new()?;
+    let (tokenizer_filename, config_filename, model_filename) = {
+        let api = ApiBuilder::new()
+            .with_cache_dir("hf_cache".into()) // 修改暫存路徑
+            .build()?;
+  
+        // 使用環境變數
+        // 需設定 HF_HOME 環境變數
+        // export HF_HOME=hf_cache
+        // 則最終的暫存路徑為 hf_cache/hub
+        // let api = ApiBuilder::from_env().build()?;
+  
+        //let api = Api::new()?; // 使用預設的暫存路徑
         let api = api.repo(repo);
-        let config = api.get("config.json")?;
-        let tokenizer = api.get("tokenizer.json")?;
-        let model = api.get("model.safetensors")?;
-        (config, tokenizer, model)
+        let config = api.get("config.json")?; // 下載 config.json
+        let tokenizer = api.get("tokenizer.json")?; // 下載 tokenizer.json
+        let model = api.get("model.safetensors")?; // 下載 model.safetensors
+        (tokenizer, config, model)
     };
+  
+    // 顯示存放的路徑。
     println!("tokenizer.json: {tokenizer_filename:?}");
     println!("config.json: {config_filename:?}");
     println!("model.safetensors: {model_filename:?}");
@@ -91,6 +103,27 @@ cargo run --bin candle-ex1
   
 目前 Huggingface 官方推薦使用 `.safetensors`，如果是原本 Pytorch 的格式，副檔名會是 `.bin`。檔案名稱慣例，如果是 Pytorch 格式，則是：`pytorch_model.bin`，如果是 Safetensors 格式，則是：`model.safetensors`。
   
+### 設定模型下載路徑
+  
+模型預設下載路徑會是 `~/.cache/huggingface/hub`，可以使用 `ApiBuilder` 來修改下載路徑。
+  
+1. `with_cache_dir` 來設定模型下載路徑。
+  
+    ```rust
+    let api = ApiBuilder::new()
+      .with_cache_dir("hf_cache".into()) // 修改暫存路徑
+      .build()?;
+    //let api = Api::new()?; // 使用預設的暫存路徑
+    ```
+  
+1. `from_env()` 從環境變數取得下載路徑，需設定 __HF_HOME__ 環境變數。如: `export HF_HOME=hf_cache`，則最終的暫存路徑為 __hf_cache/hub__。
+  
+    ```rust
+    let api = ApiBuilder::new()
+      .from_env() // 從環境變數取得下載路徑
+      .build()?;
+    ```
+  
 ## 解決沒有 tokenizer.json 方式
   
 直接寫一個 Python 程式，來匯出 tokenizer.json 檔案。以 [cross-encoder/ms-marco-MiniLM-L6-v2](https://huggingface.co/cross-encoder/ms-marco-MiniLM-L6-v2 )。
@@ -107,9 +140,9 @@ tokenizer.save_pretrained("tmp") # 匯出檔案至 tmp 目錄下。
   
 利用 `save_pretrained` 來匯出 tokenizer.json 檔案。
   
-## 顯示模型結構與修正舊版 weights 名稱
+## 顯示模型結構與修正舊版 weight 名稱
   
-之前我練習發生過載入 LSTM 預訓練模型，發生 Weight 值錯誤，以及舊版的 Weight 名稱 (gamma/beta) 問題，可以寫一個 Python 程式，將模型重新匯出一次就可以解決。
+之前我練習發生過載入 LSTM 預訓練模型，發生 weight 值錯誤，以及舊版的 weight 名稱 (gamma/beta) 問題，可以寫一個 Python 程式，將模型重新匯出一次就可以解決。
   
 以 [google-bert/bert-base-chinese](https://huggingface.co/google-bert/bert-base-chinese ) 為例，模型結構是舊版，裏面會有 `gamma` 與 `beta`。
   

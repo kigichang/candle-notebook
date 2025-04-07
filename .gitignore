@@ -27,3 +27,5 @@ Cargo.lock
 *.safetensors
 *.pth
 tmp
+hf_cache
+my_cache
