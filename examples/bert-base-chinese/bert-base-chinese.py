@@ -31,6 +31,7 @@ print(model)
 test_str = "巴黎是[MASK]国的首都。"
 
 inputs = tokenizer(test_str, return_tensors="pt")
+print("inputs:", inputs)
 
 with torch.no_grad():
     outputs = model(**inputs)

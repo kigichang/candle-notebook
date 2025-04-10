@@ -29,9 +29,9 @@ edition = "2021"
 name = "candle-ex1"
 path = "tutorial/1.Introduction/main.rs"
 
-
-
-
+[[bin]]
+name = "candle-ex2"
+path = "tutorial/2.tokenizer-and-model/tokenizer.rs"
 
 [dependencies]
 accelerate-src = { workspace = true, optional = true }
