@@ -12,12 +12,14 @@ fn encode_with_tokenizer(tokenizer: &Tokenizer, sentences: &Vec<&str>) -> Result
     for s in sentences {
         let encoded = tokenizer.encode(*s, true).map_err(anyhow::Error::msg)?;
         let ids = encoded.get_ids();
+        let type_ids = encoded.get_type_ids();
         let tokens = encoded.get_tokens();
         let attention_mask = encoded.get_attention_mask();
         println!("sentence: {:?}", s);
         println!("tokens: {:?}", tokens);
         println!("token length: {}", tokens.len()); // 留意 token 的長度
         println!("ids: {:?}", ids);
+        println!("type ids: {:?}", type_ids);
         println!("attention mask: {:?}", attention_mask);
         println!();
     }
@@ -29,12 +31,14 @@ fn encode_with_tokenizer(tokenizer: &Tokenizer, sentences: &Vec<&str>) -> Result
         .map_err(anyhow::Error::msg)?;
     for (idx, encoded) in encoded.iter().enumerate() {
         let ids = encoded.get_ids();
+        let type_ids = encoded.get_type_ids();
         let tokens = encoded.get_tokens();
         let attention_mask = encoded.get_attention_mask();
         println!("sentence: {:?}", sentences[idx]);
         println!("tokens: {:?}", tokens);
         println!("token length: {}", tokens.len()); // 留意 token 的長度
         println!("ids: {:?}", ids);
+        println!("type ids: {:?}", type_ids);
         println!("attention mask: {:?}", attention_mask);
         println!();
     }
@@ -65,6 +69,8 @@ fn enocde(model: &str, reversion: &str, sentences: Vec<&str>) -> Result<()> {
     encode_with_tokenizer(&tokenizer, &sentences)?;
 
     // 修改 Padding 與 Truncation 參數
+    // 兩個不同長度的句字，最後的 token 長度會以最長的句子為準
+    // 不足的部分使用 PAD 來補齊
     let tokenizer = {
         let mut tokenizer =
             tokenizers::Tokenizer::from_file(tokenizer_filename).map_err(anyhow::Error::msg)?;

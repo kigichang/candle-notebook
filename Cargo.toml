@@ -30,8 +30,13 @@ name = "candle-ex1"
 path = "tutorial/1.Introduction/main.rs"
 
 [[bin]]
-name = "candle-ex2"
+name = "candle-ex2-1"
 path = "tutorial/2.tokenizer-and-model/tokenizer.rs"
+
+[[bin]]
+name = "candle-ex2-2"
+path = "tutorial/2.tokenizer-and-model/model.rs"
+
 
 [dependencies]
 accelerate-src = { workspace = true, optional = true }

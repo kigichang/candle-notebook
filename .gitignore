@@ -29,3 +29,4 @@ Cargo.lock
 tmp
 hf_cache
 my_cache
+*.svg
