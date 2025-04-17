@@ -5,7 +5,7 @@
 - [2. Tokenizer and Model](2.tokenizer-and-model/README.md): 介紹如何使用 Huggingface 的 `Tokenizer` 以及 Candle 如何建立與載入模型。
   - :runner: `cargo run --release --bin candle-ex2-1`
   - :runner: `cargo run --release --bin candle-ex2-2`
-- 3.Devices: 介紹如何使用 CPU 與 GPU 加速。
+- [3.Candle 硬體加速](3.devices/README.md): 介紹如何使用 CPU 與 GPU 加速。
   
 ## 工具
 

@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "examples/candle-meet-yew",
+    "examples/candle-meet-yew", "tutorial/3.devices",
 ]
 
 [workspace.dependencies]
@@ -10,13 +10,13 @@ candle-core = "0.8.4"
 candle-datasets = "0.8.4"
 candle-nn = "0.8.4"
 candle-transformers = "0.8.4"
-half = "2.5.0"
+half = "2.6.0"
 hf-hub = "0.4.2"
 intel-mkl-src = { version = "0.8.1"}
 serde = { version = "1.0.219" }
 serde_json = "1.0.140"
 tokenizers = "0.21.1"
-anyhow = "1.0.97"
+anyhow = "1.0.98"
 tracing = "0.1.41"
 macross = { path = "../macross" }
 
@@ -55,10 +55,10 @@ anyhow = { workspace = true }
 tracing = { workspace = true }
 
 [dev-dependencies]
-crossterm = "0.28.1"
+crossterm = "0.29.0"
 ratatui = "0.29.0"
 color-eyre = "0.6.3"
-clap = { version = "4.5.35", features = ["derive"] }
+clap = { version = "4.5.36", features = ["derive"] }
 rand = "0.9.0"
 macross = { workspace = true}
 

@@ -10,6 +10,7 @@ fn conv_pth_to_safetensor() -> Result<()> {
     let mut tensor_map = HashMap::new();
 
     for item in pth_vec {
+        println!("{:?}:{:?}", item.0, item.1);
         tensor_map.insert(item.0, item.1);
     }
 
