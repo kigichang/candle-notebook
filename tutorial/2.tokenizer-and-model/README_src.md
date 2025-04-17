@@ -1,26 +1,26 @@
 ---
+export_on_save:
+  markdown: true
 markdown:
   image_dir: assets
   path: README.md
   ignore_from_front_matter: true
   absolute_image_path: false
-
-export_on_save:
-  markdown: true
 ---
+
 # Huggingface Candle Tokenizer and Model
 
-本章節主要介紹如何使用 Huggingface 的 `Tokenizer` 以及 Candle 如果操作模型。
+本章節主要介紹如何使用 Huggingface 的 `Tokenizer` 以及如何使用 Candle 讀寫模型。
 
-## 分詞器
+## Tokenizer
 
 範例程式如下：
 
 @import "tokenizer.rs" {as=rust}
 
-### 載入分詞器
+### Load Tokenizer
 
-使用 `Tokenizer::from_file` 來載入預訓練好的 `tokenizer.json` 檔。如果沒有 `tokenizer.json` 檔， :eye: [1.Introduction](1.Introduction/README.md) 會有說明如何產生。
+使用 `Tokenizer::from_file` 來載入預訓練好的 `tokenizer.json` 檔。如果沒有 `tokenizer.json` 檔， :eyes: [1.Introduction](1.Introduction/README.md) 會有說明如何產生。
 
 ```rust
 tokenizers::Tokenizer::from_file("tokenizer.json")
@@ -31,9 +31,9 @@ tokenizers::Tokenizer::from_file("tokenizer.json")
 將句子編碼的方式有：
 
 1. `encode`: 單句編碼，最常用方式。
-1. `encode_batch`: 批次編碼，將多個句子一起編碼。常用 reranking，同時比較多個句子的相關性。
+1. `encode_batch`: 批次編碼，將多個句子一起編碼。常用 reranking, 同時比較多個句子的相關性。
 
-`encode` 與 `encode_batch` 的第二個參數是 `add_special_tokens`，建議都設定成 `true`，會在句字的開頭與結尾加上特殊 token。
+`encode` 與 `encode_batch` 的第二個參數是 `add_special_tokens`，建議都設定成 `true`，會在句字的開頭與結尾加上特殊 token，例如 `[CLS]` 與 `[SEP]`。
 
 ### 取得編碼後的 ids, type ids, 與 attention mask
 
@@ -58,7 +58,7 @@ tokenizer
     .map_err(anyhow::Error::msg)?;
 ```
 
-通常用在 reranking 的時候，同時要比多個句字的相關性，使用 `encode_batch` 時，讓每個句字編號後的長度都一致，且又不是取固定最大長度。在範例中，修正 `padding` 與 `truncation` 的參數後，編碼後的長度會以最長的句子為準，其他的句子會補上 padding token 來讓長度一致。
+通常用在 reranking 的時候，同時要比多個句字的相關性，使用 `encode_batch` 時，讓每個句字編號後的長度都一致，且又不是取固定最大長度。在範例中，修正 `padding` 與 `truncation` 的參數後，編碼後的長度會以最長的句子為準，其他的句子會補上 `[PAD]` 來讓長度一致。
 
 ## Model
 
@@ -166,7 +166,7 @@ println!("embed: {:?}", embed.embeddings().to_vec2::<f32>()?);
 
 #### VarBuilder::from_mmaped_safetensors
 
-因為 `VarBuilder::from_mmaped_safetensors` 是 unsafe 的，所以需要使用 unsafe block 來包住。
+因為 `VarBuilder::from_mmaped_safetensors` 是 unsafe call，所以需要使用 unsafe 關鍵字來包住。
 
 ```rust
 // 直接使用 VarBuilder 來讀取預訓練的模型，並使用 VarBuilder 讀取模型內的變數。
