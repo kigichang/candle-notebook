@@ -10,16 +10,27 @@ export_on_save:
 ---
 # Candle 硬體加速
 
-目前我的工作環境有 Macbook Pro / Apple M1 Pro 與 Intel i5 / Ubuntu 20.04 / NVIDIA RTX 4090。本範例皆在以上的環境下進行。
+目前我的工作環境有 Macbook Pro / Apple M1 Pro 與 Intel i5 / Ubuntu 20.04 / NVIDIA RTX 4090。
 
 在 Mac OS 開發上比較單純，只要安裝 XCode command line tools 就可以了。Apple 加速支援有：
 
-- [Accelerate](https://developer.apple.com/documentation/accelerate): 提供 BLAS 與 LAPACK 加速。:eyes: [accelerate-src](https://github.com/blas-lapack-rs/accelerate-src)
+- [Accelerate](https://developer.apple.com/documentation/accelerate): 提供 BLAS 與 LAPACK 加速。使用 [accelerate-src](https://github.com/blas-lapack-rs/accelerate-src)
 - [Metal](https://developer.apple.com/metal/): 提供 GPU 加速。
 
-Intel 加速有 [Intel Math Kernel Library (oneMKL)](https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html#gs.l4dkt9)。:eyes: [intel-mkl-src](https://github.com/rust-math/intel-mkl-src)。因為 intel-mkl-src 的版本太久沒更新了，之前測試 2024 版本會編譯失敗，目前我的環境是 2023.1.0 是可以正常編譯。
+Intel 加速有 [Intel Math Kernel Library (oneMKL)](https://www.intel.com/content/www/us/en/developer/tools/oneapi/onemkl.html#gs.l4dkt9)。因為 [intel-mkl-src](https://github.com/rust-math/intel-mkl-src) 的版本太久沒更新了，之前測試 2024 版本會編譯失敗，目前我的環境是 2023.1.0 是可以正常編譯。
 
 Candle 支援 Nvidia Cuda，需要安裝 Cuda Toolkit，建議是 12.0 以上的版本。注意搭配的 GCC 版本。
+
+如果搞不定開發環境的話，可以使用 Docker 的方式來建立開發環境，先安裝好 nvidia-container-toolkit，再依照使用的 Cuda 版本，下載對應的 Nivida 開發 Image，比如我使用 Cuda 12.5 版本，就下載 `docker pull nvidia/cuda:12.5.1-cudnn-runtime-ubuntu20.04`。大致流程如下：
+
+1. 下載 Image: `docker pull nvidia/cuda:12.5.1-cudnn-runtime-ubuntu20.04`
+1. 啟動並保留環境: `docker run -d --name my_dev -v PROJECT_DIR:/workspace:z cuda:12.5.1-cudnn-runtime-ubuntu20.04 tail -f /dev/null`
+1. 進入容器: `docker exec -it my_dev bash`
+1. 安裝 curl，等會安裝 Rust 會用到: `apt update && apt install -y curl`
+1. 安裝 Rust: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+1. 將 Rust 程式加入環境變數 `$PATH`: `source $HOME/.cargo/env`
+1. 進入專案目錄: `cd /workspace`
+1. 編譯: `cargo build --release --features cuda`
 
 ## 專案環境設定
 
@@ -104,6 +115,8 @@ fn device_environment(device: &Device) {
 }
 ```
 
+Thread 的部分，Canle 使用 Rayon 套件，Thread 數預設會使用 CPU 的核心數量，這個可以透過 `RAYON_NUM_THREADS` 環境變數來設定。
+
 ### 使用 CPU 或 GPU
 
 指定使用 CPU 或 GPU 的方式是使用 `candle_core::Device` 來指定。
@@ -139,4 +152,22 @@ pub fn device(cpu: bool) -> Result<Device> {
 }
 ```
 
-在取得 device 後，在產生 `VarBuilder` 或 `Tensor` 時，帶入 `device` 即可。__Tensor__ 就會載入到 VRAM 或共用的 RAM 上。需要留意的是 `to_vec` 的操作，如 `to_vec2`，會將 `Tensor` 轉移到 CPU 使用的 RAM 上，會花費一些時間，通常都是拿最後的結果使用，不要在運算過程中使用，以免影響效能。
+在取得 device 後，在產生 `VarBuilder` 或 `Tensor` 時，帶入 `device` 即可，__Tensor__ 就會載入到 VRAM 或共用的 RAM 上，如：
+
+```rust
+let vb = VarBuilder::zeros(candle_core::DType::F32, &device);
+let ln = linear(1024, 768, vb.pp("ln1"))?;
+let input = Tensor::rand(-1.0f32, 1.0f32, (64, 1024), &device)?;
+
+let weights = Tensor::rand(-1.0f32, 1.0f32, (768, 1024), &device)?;
+let bias = Tensor::rand(-1.0f32, 1.0f32, 768, &device)?;
+```
+
+需要留意的是 `to_vec` 的操作，如 `to_vec2`，會將 `Tensor` 轉移到 CPU 使用的 RAM 上，會花費一些時間，通常都是拿最後的結果使用，不要在運算過程中使用，以免影響效能。
+
+```rust
+for _i in 0..args.loops {
+    let _result = ln.forward(&input)?;
+    // _result.to_vec2::<f32>()?; // 將 tensor 資料，轉到 RAM 上，會花費時間。
+}
+```
