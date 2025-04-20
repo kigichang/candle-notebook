@@ -17,6 +17,91 @@ const MODLE_NAME: &str = "Qwen/Qwen2.5-1.5B-Instruct";
 const MODEL_REVISION: &str = "main";
 const MODEL_CACHE_DIR: &str = "hf_cache";
 
+fn main() -> Result<()> {
+    let args = Args::parse();
+    let device = candle_examples::device(args.cpu)?;
+    // 參考 sample code.
+    let dtype = if device.is_cuda() {
+        DType::BF16
+    } else {
+        DType::F32
+    };
+
+    println!("candle-ex4: {}:{}", args.model, args.revision);
+
+    // 下載相關檔案
+    let repo_files = args.load_model_from_hub()?;
+
+    // 顯示存放的路徑。
+    // println!("repo_files:\n{:?}", repo_files);
+
+    let tokenizer_config: serde_json::Value =
+        serde_json::from_reader(std::fs::File::open(repo_files.tokenizer_config)?)?;
+
+    // 自 tokenizer_config.json 取得 chat_template
+    let chat_template = tokenizer_config
+        .get("chat_template")
+        .map(|v| v.as_str())
+        .flatten()
+        .ok_or(anyhow::anyhow!("chat_template not found"))?;
+    if args.show_chat_template {
+        println!("chat_template:\n{chat_template}");
+    }
+
+    // 使用 minijinja 來處理 chat_template
+    // minijinja::Environment 類似 Global Template Engine,
+    // 可以加入多個子 template。
+    let mut env = Environment::new();
+    env.add_template("qwen_chat_template", chat_template)?;
+
+    // 取得 Qwen 的 template
+    let template = env.get_template("qwen_chat_template")?;
+
+    let tokenizer =
+        tokenizers::Tokenizer::from_file(repo_files.tokenizer).map_err(anyhow::Error::msg)?;
+
+    let config: Config = serde_json::from_reader(std::fs::File::open(repo_files.config)?)?;
+    let vb =
+        unsafe { VarBuilder::from_mmaped_safetensors(&repo_files.model_files, dtype, &device)? };
+
+    let model = ModelForCausalLM::new(&config, vb)?;
+
+    // 合併 generation 設定
+    let generation_config = {
+        let mut generation_config: GenerationConfig =
+            serde_json::from_reader(std::fs::File::open(repo_files.generation_config)?)?;
+
+        if args.temperature.is_some() {
+            generation_config.temperature = args.temperature;
+        }
+
+        if args.top_p.is_some() {
+            generation_config.top_p = args.top_p;
+        }
+
+        generation_config
+    };
+
+    let mut pipeline = TextGeneration::new(
+        model,
+        tokenizer,
+        &generation_config,
+        template,
+        rand::random::<u64>(),
+        64,
+        &device,
+    );
+
+    pipeline.run(
+        &args.system,
+        &args.prompt,
+        args.max_new_tokens,
+        args.show_prompt,
+    )?;
+
+    Ok(())
+}
+
 #[derive(Debug, Parser)]
 struct Args {
     #[arg(long, default_value_t = String::from("You are Qwen, created by Alibaba Cloud. You are a helpful assistant."))]
@@ -39,6 +124,18 @@ struct Args {
 
     #[arg(long, default_value_t = false)]
     show_prompt: bool,
+
+    #[arg(long, default_value_t = false)]
+    show_chat_template: bool,
+
+    #[arg(long)]
+    temperature: Option<f64>,
+
+    #[arg(long)]
+    top_p: Option<f64>,
+
+    #[arg(long, default_value_t = 1024)]
+    max_new_tokens: usize,
 }
 
 impl Args {
@@ -55,16 +152,22 @@ impl Args {
 
         let repo = api.repo(repo);
 
-        let tokenizer_config = repo.get("tokenizer_config.json")?; // 下載 tokenizer_config.json
+        // 下載 tokenizer_config.json
+        // 主要要取得 chat_template
+        let tokenizer_config = repo.get("tokenizer_config.json")?;
         let tokenizer = repo.get("tokenizer.json")?; // 下載 tokenizer.json
         let config = repo.get("config.json")?; // 下載 config.json
 
+        // 先下載 model.safetensors，如果沒有則找 model.safetensors.index.json
         let model_files = if let Ok(single_file) = repo.get("model.safetensors") {
             vec![single_file]
         } else {
             candle_examples::hub_load_safetensors(&repo, "model.safetensors.index.json")?
         };
-        let generation_config = repo.get("generation_config.json")?; // 下載 generation_config.json
+
+        // 下載 generation_config.json
+        // 主要取得 eos_token_id
+        let generation_config = repo.get("generation_config.json")?;
 
         Ok(RepoFiles {
             tokenizer_config,
@@ -76,65 +179,7 @@ impl Args {
     }
 }
 
-fn main() -> Result<()> {
-    let args = Args::parse();
-    let device = candle_examples::device(args.cpu)?;
-    let dtype = if device.is_cuda() {
-        DType::BF16
-    } else {
-        DType::F32
-    };
-
-    println!("candle-ex4: {}:{}", args.model, args.revision);
-
-    let repo_files = args.load_model_from_hub()?;
-
-    // 顯示存放的路徑。
-    // println!("repo_files:\n{:?}", repo_files);
-
-    let tokenizer_config: serde_json::Value =
-        serde_json::from_reader(std::fs::File::open(repo_files.tokenizer_config)?)?;
-
-    let chat_template = tokenizer_config
-        .get("chat_template")
-        .map(|v| v.as_str())
-        .flatten()
-        .ok_or(anyhow::anyhow!("chat_template not found"))?;
-
-    // println!("chat_template: {chat_template}");
-
-    let mut env = Environment::new();
-    env.add_template("chat_template", chat_template)?;
-    let template = env.get_template("chat_template")?;
-
-    let tokenizer =
-        tokenizers::Tokenizer::from_file(repo_files.tokenizer).map_err(anyhow::Error::msg)?;
-    let config: Config = serde_json::from_reader(std::fs::File::open(repo_files.config)?)?;
-    let vb =
-        unsafe { VarBuilder::from_mmaped_safetensors(&repo_files.model_files, dtype, &device)? };
-
-    let model = ModelForCausalLM::new(&config, vb)?;
-
-    let generation_config: GenerationConfig =
-        serde_json::from_reader(std::fs::File::open(repo_files.generation_config)?)?;
-
-    let mut pipeline = TextGeneration::new(
-        model,
-        tokenizer,
-        &generation_config,
-        template,
-        299792458,
-        64,
-        &device,
-    );
-
-    let sample_len = 10240;
-
-    pipeline.run(&args.system, &args.prompt, sample_len, args.show_prompt)?;
-
-    Ok(())
-}
-
+/// HF hub repo 檔案
 #[derive(Debug)]
 struct RepoFiles {
     tokenizer_config: PathBuf,
@@ -200,11 +245,22 @@ impl<'template> TextGeneration<'template> {
         &mut self,
         system: &str,
         prompt: &str,
-        sample_len: usize,
+        max_new_tokens: usize,
         show_prompt: bool,
     ) -> Result<()> {
         use std::io::Write;
-        let prompt = self.template.render(context! {
+        // 等同官網 sample code
+        // prompt = "Give me a short introduction to large language model."
+        // messages = [
+        //     {"role": "system", "content": "You are Qwen, created by Alibaba Cloud. You are a helpful assistant."},
+        //     {"role": "user", "content": prompt}
+        // ]
+        // text = tokenizer.apply_chat_template(
+        //     messages,
+        //     tokenize=False,
+        //     add_generation_prompt=True
+        // )
+        let text = self.template.render(context! {
             messages => vec![
                 context!{
                     role => "system",
@@ -215,18 +271,21 @@ impl<'template> TextGeneration<'template> {
                     content => prompt,
                 }
             ],
+            // 依 chat_template 的定義，加入 add_generation_prompt
+            // 會在最後加 '<|im_start|>assistant\n'
+            // 才會正確生成答案，否則在生成時，會出現奇怪的 token，eg: 'ystem\n'
             add_generation_prompt => true,
         })?;
 
         if show_prompt {
-            println!("prompt:\n{prompt}");
+            println!("prompt:\n{text}");
         }
 
         self.tokenizer.clear();
         let mut tokens = self
             .tokenizer
             .tokenizer()
-            .encode(prompt, true)
+            .encode(text, true)
             .map_err(anyhow::Error::msg)?
             .get_ids()
             .to_vec();
@@ -239,7 +298,7 @@ impl<'template> TextGeneration<'template> {
 
         let mut generated_tokens = 0usize;
         let start_gen = std::time::Instant::now();
-        for index in 0..sample_len {
+        for index in 0..max_new_tokens {
             let context_size = if index > 0 { 1 } else { tokens.len() };
             let start_pos = tokens.len().saturating_sub(context_size);
             let ctxt = &tokens[start_pos..];
