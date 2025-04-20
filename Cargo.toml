@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "examples/candle-meet-yew", "tutorial/3.device-acceleration",
+    "examples/candle-meet-yew", "tutorial/3.device-acceleration", "tutorial/4.generation",
 ]
 
 [workspace.dependencies]
@@ -10,6 +10,8 @@ candle-core = "0.8.4"
 candle-datasets = "0.8.4"
 candle-nn = "0.8.4"
 candle-transformers = "0.8.4"
+candle-examples = "0.8.4"
+minijinja = "2.9.0"
 half = "2.6.0"
 hf-hub = "0.4.2"
 intel-mkl-src = { version = "0.8.1"}
@@ -18,7 +20,7 @@ serde_json = "1.0.140"
 tokenizers = "0.21.1"
 anyhow = "1.0.98"
 tracing = "0.1.41"
-macross = { path = "../macross" }
+macross = {git = "https://github.com/kigichang/macross", branch = "main"}
 
 [package]
 name = "candle-notebook"
@@ -45,6 +47,8 @@ candle-core = { workspace = true }
 candle-datasets = { workspace = true }
 candle-nn = { workspace = true }
 candle-transformers = { workspace = true }
+minijinja = { workspace = true }
+candle-examples = { workspace = true }
 half = { workspace = true }
 hf-hub = { workspace = true }
 intel-mkl-src = { workspace = true, optional = true }
@@ -53,13 +57,13 @@ serde_json = { workspace = true, features = []}
 tokenizers = { workspace = true, features = ["http"]}
 anyhow = { workspace = true }
 tracing = { workspace = true }
+clap = { version = "4.5.37", features = ["derive"] }
 
 [dev-dependencies]
 crossterm = "0.29.0"
 ratatui = "0.29.0"
 color-eyre = "0.6.3"
-clap = { version = "4.5.36", features = ["derive"] }
-rand = "0.9.0"
+rand = "0.9.1"
 macross = { workspace = true}
 
 [features]

@@ -1,4 +1,6 @@
-# Huggingface Candle 簡易版說明
+# Huggingface Candle 使用筆記
+
+以推論(inference)為主的筆記。
 
 - [1.Introduction](1.Introduction/README.md): 簡介與可能遇到的問題修正
   - :runner: `cargo run --release --bin candle-ex1`
@@ -6,6 +8,9 @@
   - :runner: `cargo run --release --bin candle-ex2-1`
   - :runner: `cargo run --release --bin candle-ex2-2`
 - [3.Candle 硬體加速](3.device-acceleration/README.md): 介紹如何使用 CPU 與 GPU 加速。
+  - 為獨立的專案，可以進到目錄後，執行 `cargo run --release` 來執行。
+- [4.Generation](4.generation/README.md): 介紹如何使用 Huggingface Candle 與 Qwen2.5-1.5-Instruct 進行文字生成。
+  - 為獨立的專案，可以進到目錄後，執行 `cargo run --release` 來執行。
   
 ## 工具
 

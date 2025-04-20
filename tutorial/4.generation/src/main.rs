@@ -35,6 +35,14 @@ fn main() -> Result<()> {
     // 顯示存放的路徑。
     // println!("repo_files:\n{:?}", repo_files);
 
+    let tokenizer =
+        tokenizers::Tokenizer::from_file(repo_files.tokenizer).map_err(anyhow::Error::msg)?;
+    let vb =
+        unsafe { VarBuilder::from_mmaped_safetensors(&repo_files.model_files, dtype, &device)? };
+
+    let config: Config = serde_json::from_reader(std::fs::File::open(repo_files.config)?)?;
+    let model = ModelForCausalLM::new(&config, vb)?;
+
     let tokenizer_config: serde_json::Value =
         serde_json::from_reader(std::fs::File::open(repo_files.tokenizer_config)?)?;
 
@@ -56,15 +64,6 @@ fn main() -> Result<()> {
 
     // 取得 Qwen 的 template
     let template = env.get_template("qwen_chat_template")?;
-
-    let tokenizer =
-        tokenizers::Tokenizer::from_file(repo_files.tokenizer).map_err(anyhow::Error::msg)?;
-
-    let config: Config = serde_json::from_reader(std::fs::File::open(repo_files.config)?)?;
-    let vb =
-        unsafe { VarBuilder::from_mmaped_safetensors(&repo_files.model_files, dtype, &device)? };
-
-    let model = ModelForCausalLM::new(&config, vb)?;
 
     // 合併 generation 設定
     let generation_config = {
@@ -139,6 +138,7 @@ struct Args {
 }
 
 impl Args {
+    /// 下載模型檔案
     fn load_model_from_hub(&self) -> Result<RepoFiles> {
         let api = ApiBuilder::new()
             .with_cache_dir((&self.cache_dir).into())

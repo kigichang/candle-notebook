@@ -17,6 +17,7 @@ source candle-nb/bin/activate # 啟動虛擬環境
 
 ## 筆記內容 (持續更新中)
 
+1. [以推論為主軸，介紹如何使用 Huggingface Candle](tutorial/README.md)
 1. [matrix-op](examples/matrix-op/README.md): 透過 2D 繪圖，學習 Candle 的基本操作。
     * 位移、旋轉矩陣。
     * 矩陣乘法。
