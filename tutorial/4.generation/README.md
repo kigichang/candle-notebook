@@ -1,5 +1,4 @@
   
-  
 # Generation
   
 本章節主要介紹如何使用 Huggingface Candle 與 [Qwen2.5-1.5-Instruct](https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct ) 進行文字生成。本範例是修改自 [https://github.com/huggingface/candle/tree/main/candle-examples/examples/qwen](https://github.com/huggingface/candle/tree/main/candle-examples/examples/qwen )。在使用預訓練模型時，可以先到 [https://github.com/huggingface/candle/tree/main/candle-examples/examples](https://github.com/huggingface/candle/tree/main/candle-examples/examples ) 的尋找有沒有範例可以參考。
@@ -8,12 +7,54 @@
   
 ### 1. 自 Huggingface 下載相關檔案
   
-以先前範例雷同，但
+與先前範例雷同，但
   
 1. 多下載了 `tokenizer_config.json`，讀取模型的 chat template。
 1. 多下載了 `generation_config.json`，讀取 `eos_token_id`，用來判斷結束生成條件。
 1. 先下載 `model.safetensors`，如果沒有，代表該模型檔案太大，有切割成多個檔案，這時候就要下載 `model.safetensors.index.json`，然後再下載切割的模型檔案。
     - 使用 `candle_examples::hub_load_safetensors` 來處理最後存放的路徑。
+  
+```rust
+/// 下載模型檔案
+fn load_model_from_hub(&self) -> Result<RepoFiles> {
+    let api = ApiBuilder::new()
+        .with_cache_dir((&self.cache_dir).into())
+        .build()?;
+  
+    let repo = Repo::with_revision(
+        self.model.to_owned(),
+        RepoType::Model,
+        self.revision.to_owned(),
+    );
+  
+    let repo = api.repo(repo);
+  
+    // 下載 tokenizer_config.json
+    // 主要要取得 chat_template
+    let tokenizer_config = repo.get("tokenizer_config.json")?;
+    let tokenizer = repo.get("tokenizer.json")?; // 下載 tokenizer.json
+    let config = repo.get("config.json")?; // 下載 config.json
+  
+    // 先下載 model.safetensors，如果沒有則找 model.safetensors.index.json
+    let model_files = if let Ok(single_file) = repo.get("model.safetensors") {
+        vec![single_file]
+    } else {
+        candle_examples::hub_load_safetensors(&repo, "model.safetensors.index.json")?
+    };
+  
+    // 下載 generation_config.json
+    // 主要取得 eos_token_id
+    let generation_config = repo.get("generation_config.json")?;
+  
+    Ok(RepoFiles {
+        tokenizer_config,
+        tokenizer,
+        config,
+        model_files,
+        generation_config,
+    })
+}
+```
   
 ### 2. 載入 Tokenizer 與預訓練模型
   
