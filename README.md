@@ -18,7 +18,7 @@ source candle-nb/bin/activate # 啟動虛擬環境
 ## 筆記內容 (持續更新中)
 
 1. [以推論為主軸，介紹如何使用 Huggingface Candle](tutorial/README.md)
-    1. [Introduction](tutorial/1.introduction/README.md): 簡介 Candle 與如何使用 Huggingface Hub 下載模型。
+    1. [Introduction](tutorial/1.Introduction/README.md): 簡介 Candle 與如何使用 Huggingface Hub 下載模型。
     1. [Tokenizer 與建立模型](tutorial/2.tokenizer-and-model/README.md): 介紹 Tokenizer 與如何建立模型。
     1. [硬體加速](tutorial/3.device-acceleration/README.md): 介紹如何使用硬體加速。
     1. [文字生成](tutorial/4.generation/README.md): 介紹如何使用 Huggingface Candle 與 [Qwen2.5-1.5-Instruct](https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct) 進行文字生成。
