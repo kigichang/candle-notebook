@@ -1,6 +1,6 @@
 [workspace]
 members = [
-    "examples/candle-meet-yew", "tutorial/3.device-acceleration", "tutorial/4.generation",
+    "examples/candle-meet-yew", "tutorial/3.device-acceleration", "tutorial/4.generation", "tutorial/5.generation-gguf",
 ]
 
 [workspace.dependencies]

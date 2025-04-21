@@ -1,6 +1,6 @@
 use std::path::PathBuf;
 
-use candle_core::utils::{cuda_is_available, metal_is_available};
+use candle_core::utils;
 use candle_core::{DType, Device, Result, Shape, Tensor, WithDType};
 use hf_hub::api::sync::Api;
 use hf_hub::{Repo, RepoType};
@@ -9,9 +9,9 @@ use hf_hub::{Repo, RepoType};
 pub fn device(cpu: bool) -> Result<Device> {
     if cpu {
         Ok(Device::Cpu)
-    } else if cuda_is_available() {
+    } else if utils::cuda_is_available() {
         Ok(Device::new_cuda(0)?)
-    } else if metal_is_available() {
+    } else if utils::metal_is_available() {
         Ok(Device::new_metal(0)?)
     } else {
         #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
@@ -136,3 +136,25 @@ cmp_op!(ge, >=, a, b, 1, 0, u8);
 vec_n_op!(ge_vec1, ge, T, u8);
 vec_n_op!(ge_vec2, ge_vec1, Vec<T>, Vec<u8>);
 vec_n_op!(ge_vec3, ge_vec2, Vec<Vec<T>>, Vec<Vec<u8>>);
+
+// This function prints the device environment information
+// such as number of threads, CUDA availability, MKL availability, etc.
+// It uses the `utils` module from the `candle_core` crate to get this information.
+pub fn device_environment(device: &Device) {
+    println!("cuda_is_available? {}", utils::cuda_is_available());
+    println!("metal_is_available? {}", utils::metal_is_available());
+    println!("has_mkl? {}", utils::has_mkl());
+    println!("has_accelerate? {}", utils::has_accelerate());
+    println!("with_avx? {}", utils::with_avx());
+    println!("with_f16c? {}", utils::with_f16c());
+    println!("with_neon? {}", utils::with_neon());
+    println!("with_simd128? {}", utils::with_simd128());
+    println!("num of threads: {}", utils::get_num_threads());
+
+    println!("device: {:?}", device);
+    println!("\tis cuda? {}", device.is_cuda());
+    println!("\tis metal? {}", device.is_metal());
+    println!("\tis cpu? {}", device.is_cpu());
+    println!("\tlocation {:?}", device.location());
+    println!("\tsupport bf16? {}", device.supports_bf16());
+}
