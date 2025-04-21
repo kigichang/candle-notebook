@@ -3,7 +3,6 @@ use candle_core::{DType, Device, Tensor, quantized::gguf_file};
 use candle_examples::token_output_stream::TokenOutputStream;
 
 use candle_transformers::generation::{LogitsProcessor, Sampling};
-
 use candle_transformers::models::quantized_qwen2::ModelWeights;
 use clap::Parser;
 use hf_hub::{Repo, RepoType, api::sync::ApiBuilder};
@@ -21,6 +20,7 @@ fn main() -> Result<()> {
     let device = candle_examples::device(args.cpu)?;
 
     println!("candle-ex5: {}-GGUF:{}", args.model, args.revision);
+    candle_notebook::device_environment(&device);
 
     // 下載相關檔案
     let repo_files = args.load_model_from_hub()?;
