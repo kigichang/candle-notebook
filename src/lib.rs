@@ -1,3 +1,5 @@
+pub mod generation;
+
 use std::path::PathBuf;
 
 use candle_core::utils;
