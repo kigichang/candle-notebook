@@ -3,7 +3,7 @@ members = [
     "examples/candle-meet-yew", 
     "tutorial/3.device-acceleration", 
     "tutorial/4.generation", 
-    "tutorial/5.generation-gguf",
+    "tutorial/5.generation-gguf", "tutorial/6.text-embeddings",
 ]
 
 [workspace.dependencies]
@@ -61,13 +61,13 @@ tokenizers = { workspace = true, features = ["http"]}
 anyhow = { workspace = true }
 tracing = { workspace = true }
 clap = { version = "4.5.37", features = ["derive"] }
+macross = { workspace = true }
 
 [dev-dependencies]
 crossterm = "0.29.0"
 ratatui = "0.29.0"
 color-eyre = "0.6.3"
 rand = "0.9.1"
-macross = { workspace = true}
 
 [features]
 default = []
