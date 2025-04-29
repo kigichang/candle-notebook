@@ -9,9 +9,11 @@
   - :runner: `cargo run --release --bin candle-ex2-2`
 - [3.Candle 硬體加速](3.device-acceleration/README.md): 介紹如何使用 CPU 與 GPU 加速。
   - 為獨立的專案，可以進到目錄後，執行 `cargo run --release` 來執行。
-- [4.Generation](4.generation/README.md): 介紹如何使用 Huggingface Candle 與 Qwen2.5-1.5-Instruct 進行文字生成。
+- [4.文字生成](4.generation/README.md): 介紹如何使用 Huggingface Candle 與 [Qwen2.5-1.5B-Instruct](https://huggingface.co/Qwen/Qwen2.5-1.5B-Instruct) 進行文字生成。
   - 為獨立的專案，可以進到目錄後，執行 `cargo run --release` 來執行。
-  
+- [5.使用量化模型 (GGUF) 進行文字生成](5.generation-gguf/README.md): 介紹如何使用 Huggingface Candle 與量化模型[Qwen2.5-3B-Instruct-GGUF](https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF) 進行文字生成。
+  - 為獨立的專案，可以進到目錄後，執行 `cargo run --release` 來執行。
+
 ## 工具
 
 - [Netron](https://github.com/lutzroeder/netron): 用來檢視模型結構的工具。
