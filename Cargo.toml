@@ -3,7 +3,9 @@ members = [
     "examples/candle-meet-yew", 
     "tutorial/3.device-acceleration", 
     "tutorial/4.generation", 
-    "tutorial/5.generation-gguf", "tutorial/6.text-embeddings",
+    "tutorial/5.generation-gguf", 
+    "tutorial/6.qwen3",
+    "tutorial/8.text-embeddings",
 ]
 
 [workspace.dependencies]
