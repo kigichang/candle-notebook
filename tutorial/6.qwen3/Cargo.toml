@@ -1,0 +1,29 @@
+[package]
+name = "candle-ex6"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+candle-core = { git="https://github.com/huggingface/candle.git", rev = "1fdfb58de51fc7143e24c1048bb1b6ab7ae1b871"}
+candle-nn = { git="https://github.com/huggingface/candle.git", rev = "1fdfb58de51fc7143e24c1048bb1b6ab7ae1b871"}
+candle-transformers = { git="https://github.com/huggingface/candle.git", rev = "1fdfb58de51fc7143e24c1048bb1b6ab7ae1b871"}
+candle-examples = { git="https://github.com/huggingface/candle.git", rev = "1fdfb58de51fc7143e24c1048bb1b6ab7ae1b871"}
+minijinja = "2.9.0"
+accelerate-src = { version = "0.3.2", optional = true }
+bindgen_cuda = { version = "0.1.5", optional = true }
+intel-mkl-src = { version = "0.8.1", optional = true }
+anyhow = "1.0.97"
+clap = { version = "4.5.36", features = ["derive"] }
+hf-hub = "0.4.2"
+serde = { version = "1.0.219", features = ["derive"] }
+tokenizers = "0.21.1"
+serde_json = "1.0.140"
+rand = "0.9.1"
+candle-notebook = { path = "../../" }
+[features]
+default = []
+accelerate = ["dep:accelerate-src", "candle-core/accelerate", "candle-nn/accelerate"]
+cuda = ["dep:bindgen_cuda", "candle-core/cuda", "candle-nn/cuda"]
+mkl = ["dep:intel-mkl-src", "candle-core/mkl", "candle-nn/mkl"]
+metal = ["candle-core/metal", "candle-nn/metal"]
+
