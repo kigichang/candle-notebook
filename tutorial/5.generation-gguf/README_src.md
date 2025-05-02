@@ -19,7 +19,7 @@ markdown:
 
 ### 2. 載入 Tokenizer 與 Chat Template
 
-與 [4.generation-llama](../4.generation-llama/README.md) 範例類似。
+與 [4.generation](../4.generation/README.md) 範例類似。
 
 ### 3. 下載 GGUF 檔案並載入模型
 
