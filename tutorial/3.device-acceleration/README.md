@@ -32,8 +32,8 @@ version = "0.1.0"
 edition = "2024"
   
 [dependencies]
-candle-core = "0.8.4"
-candle-nn = "0.8.4"
+candle-core = "0.9.1"
+candle-nn = "0.9.1"
 accelerate-src = { version = "0.3.2", optional = true }
 bindgen_cuda = { version = "0.1.5", optional = true }
 intel-mkl-src = { version = "0.8.1", optional = true }

@@ -1,4 +1,5 @@
 use anyhow::Result;
+use candle_core::DType;
 use candle_core::Tensor;
 use macross::{AutoModel, AutoTokenizer};
 
@@ -20,7 +21,7 @@ fn main() -> Result<()> {
 
     let bert = macross::models::bert::BertModel::from_pretrained(
         ("sentence-transformers/all-MiniLM-L6-v2", true),
-        candle_core::DType::F32,
+        DType::F32,
         &device,
     )?;
 

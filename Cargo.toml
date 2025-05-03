@@ -4,18 +4,18 @@ members = [
     "tutorial/3.device-acceleration", 
     "tutorial/4.generation", 
     "tutorial/5.generation-gguf", 
-    "tutorial/6.qwen3",
+    "tutorial/qwen3",
     "tutorial/8.text-embeddings",
 ]
 
 [workspace.dependencies]
 accelerate-src = { version = "0.3.2"}
 bindgen_cuda = { version = "0.1.5"}
-candle-core = "0.8.4"
-candle-datasets = "0.8.4"
-candle-nn = "0.8.4"
-candle-transformers = "0.8.4"
-candle-examples = "0.8.4"
+candle-core = "0.9.1"
+candle-datasets = "0.9.1"
+candle-nn = "0.9.1"
+candle-transformers = "0.9.1"
+candle-examples = "0.9.1"
 minijinja = "2.9.0"
 half = "2.6.0"
 hf-hub = "0.4.2"
@@ -25,7 +25,7 @@ serde_json = "1.0.140"
 tokenizers = "0.21.1"
 anyhow = "1.0.98"
 tracing = "0.1.41"
-macross = { git = "https://github.com/kigichang/macross", branch = "main" }
+macross = { git = "https://github.com/kigichang/macross", rev = "9c3f7f3a2665a19a04fd3893321718493346d5a9" }
 
 [package]
 name = "candle-notebook"
