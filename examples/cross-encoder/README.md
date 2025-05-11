@@ -308,10 +308,13 @@ pub fn load(vb: VarBuilder, config: &Config) -> Result<Self> {
             }
         }
     };
+
+    let pooler = config.id2label.as_ref().and_then(|_| pooler.ok());
+
     Ok(Self {
         embeddings,
         encoder,
-        pooler: pooler.ok(),
+        pooler,
         device: vb.device().clone(),
         span: tracing::span!(tracing::Level::TRACE, "model"),
     })
@@ -320,7 +323,7 @@ pub fn load(vb: VarBuilder, config: &Config) -> Result<Self> {
 
 #### 3.2.2 修改 BertModel::forward
 
-判斷是否有 `pooler` 層，如果有就加入 `pooler` 層的推論。
+判斷是否有 `pooler` 層且 `id2label` 是否存在，如果都有就加入 `pooler` 層的推論。
 
 ```rust
 pub fn forward(

@@ -72,6 +72,7 @@ pub struct Config {
     #[serde(default)]
     use_cache: bool,
     classifier_dropout: Option<f64>,
+    id2label: Option<std::collections::HashMap<String, String>>,
     model_type: Option<String>,
 }
 
@@ -93,6 +94,7 @@ impl Default for Config {
             position_embedding_type: PositionEmbeddingType::Absolute,
             use_cache: true,
             classifier_dropout: None,
+            id2label: None,
             model_type: Some("bert".to_string()),
         }
     }
@@ -117,6 +119,7 @@ impl Config {
             position_embedding_type: PositionEmbeddingType::Absolute,
             use_cache: true,
             classifier_dropout: None,
+            id2label: None,
             model_type: Some("bert".to_string()),
         }
     }
@@ -480,10 +483,13 @@ impl BertModel {
                 }
             }
         };
+
+        let pooler = config.id2label.as_ref().and_then(|_| pooler.ok());
+
         Ok(Self {
             embeddings,
             encoder,
-            pooler: pooler.ok(),
+            pooler,
             device: vb.device().clone(),
             span: tracing::span!(tracing::Level::TRACE, "model"),
         })
@@ -507,12 +513,11 @@ impl BertModel {
 
         // 加入 pooler 層推論
         // https://github.com/huggingface/transformers/blob/v4.46.3/src/transformers/models/bert/modeling_bert.py#L1155
-        let result = if let Some(ref pooler) = self.pooler {
-            pooler.forward(&sequence_output)?
+        if let Some(ref pooler) = self.pooler {
+            pooler.forward(&sequence_output)
         } else {
-            sequence_output
-        };
-        Ok(result)
+            Ok(sequence_output)
+        }
     }
 }
 

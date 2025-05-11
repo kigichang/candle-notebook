@@ -12,11 +12,12 @@ fn main() -> Result<()> {
                 .map_err(anyhow::Error::msg)?;
         let params = tokenizers::PaddingParams::default();
         let truncation = tokenizers::TruncationParams::default();
-        let tokenizer = tokenizer.with_padding(Some(params));
-        let tokenizer = tokenizer
+        tokenizer.with_padding(Some(params));
+        tokenizer
             .with_truncation(Some(truncation))
             .map_err(anyhow::Error::msg)?;
-        tokenizer.clone()
+        println!("tokenizer: {:?}", tokenizer);
+        tokenizer
     };
 
     let bert = macross::models::bert::BertModel::from_pretrained(
@@ -47,6 +48,7 @@ fn main() -> Result<()> {
     let attention_mask = Tensor::stack(&attention_mask, 0)?;
 
     let result = bert.forward(&ids, &type_ids, &attention_mask)?;
+    println!("result: {:?}", result.shape());
     let mean = macross::models::bert::mean_pooling(&result, &attention_mask)?;
     let result = macross::normalize(&mean)?;
     //println!("result: {:?}", result.to_vec2::<f32>()?);

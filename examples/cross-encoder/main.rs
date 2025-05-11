@@ -21,13 +21,14 @@ fn main() -> Result<()> {
     let api = api.repo(repo);
     let config = api.get("config.json")?;
     let bert = api.get("pytorch_model.bin")?;
+    let tokenizer = api.get("tokenizer.json")?;
 
     let config = load_config(config)?;
     let vb = VarBuilder::from_pth(bert, DType::F32, &device)?;
     let bert = BertForSequenceClassification::load(vb, &config)?;
 
     // 從本地端讀取匯出的 tokenizer.json。
-    let mut tokenizer = tokenizers::Tokenizer::from_file("tmp/tokenizer.json").map_err(E::msg)?;
+    let mut tokenizer = tokenizers::Tokenizer::from_file(tokenizer).map_err(E::msg)?;
     // 加入預設的 padding 設定，讓所有的 token 長度對齊一致。
     let params = tokenizers::PaddingParams::default();
     let tokenizer = tokenizer.with_padding(Some(params));

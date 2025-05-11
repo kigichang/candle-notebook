@@ -4,10 +4,10 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-candle-core = { git="https://github.com/huggingface/candle.git", rev = "1fdfb58de51fc7143e24c1048bb1b6ab7ae1b871"}
-candle-nn = { git="https://github.com/huggingface/candle.git", rev = "1fdfb58de51fc7143e24c1048bb1b6ab7ae1b871"}
-candle-transformers = { git="https://github.com/huggingface/candle.git", rev = "1fdfb58de51fc7143e24c1048bb1b6ab7ae1b871"}
-candle-examples = { git="https://github.com/huggingface/candle.git", rev = "1fdfb58de51fc7143e24c1048bb1b6ab7ae1b871"}
+candle-core = { workspace = true}
+candle-nn = { workspace = true}
+candle-transformers = { workspace = true}
+candle-examples = { workspace = true}
 minijinja = "2.9.0"
 accelerate-src = { version = "0.3.2", optional = true }
 bindgen_cuda = { version = "0.1.5", optional = true }

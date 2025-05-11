@@ -1,7 +1,7 @@
-from transformers import AutoTokenizer, AutoModelForSequenceClassification, BertTokenizerFast
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
 import torch
 
-model = AutoModelForSequenceClassification.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
+model = AutoModelForSequenceClassification.from_pretrained('cross-encoder/ms-marco-MiniLM-L6-v2')
 tokenizer = AutoTokenizer.from_pretrained('cross-encoder/ms-marco-MiniLM-L-6-v2')
 print(tokenizer)
 # 存 tokenizer
@@ -17,9 +17,9 @@ features = tokenizer(
     ],
     padding=True, truncation=True, return_tensors="pt")
 
-model.eval()
-# 印出模型結構
-print(model)
+# model.eval()
+# # 印出模型結構
+# print(model)
 with torch.no_grad():
     scores = model(**features).logits
     print(scores)

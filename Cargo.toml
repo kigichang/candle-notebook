@@ -11,11 +11,11 @@ members = [
 [workspace.dependencies]
 accelerate-src = { version = "0.3.2"}
 bindgen_cuda = { version = "0.1.5"}
-candle-core = "0.9.1"
-candle-datasets = "0.9.1"
-candle-nn = "0.9.1"
-candle-transformers = "0.9.1"
-candle-examples = "0.9.1"
+candle-core = { path = "../candle/candle-core"}
+candle-datasets = { path = "../candle/candle-datasets"}
+candle-nn = { path = "../candle/candle-nn"}
+candle-transformers = { path = "../candle/candle-transformers"}
+candle-examples = { path = "../candle/candle-examples"}
 minijinja = "2.9.0"
 half = "2.6.0"
 hf-hub = "0.4.2"
@@ -25,7 +25,8 @@ serde_json = "1.0.140"
 tokenizers = "0.21.1"
 anyhow = "1.0.98"
 tracing = "0.1.41"
-macross = { git = "https://github.com/kigichang/macross", rev = "9c3f7f3a2665a19a04fd3893321718493346d5a9" }
+macross = { path = "../macross" }
+mospeada = { path = "../mospeada" }
 
 [package]
 name = "candle-notebook"
@@ -64,10 +65,11 @@ anyhow = { workspace = true }
 tracing = { workspace = true }
 clap = { version = "4.5.37", features = ["derive"] }
 macross = { workspace = true }
+mospeada = { workspace = true }
 
 [dev-dependencies]
-crossterm = "0.29.0"
-ratatui = "0.29.0"
+crossterm = "0.28.1"
+ratatui = "0.28.0"
 color-eyre = "0.6.3"
 rand = "0.9.1"
 
