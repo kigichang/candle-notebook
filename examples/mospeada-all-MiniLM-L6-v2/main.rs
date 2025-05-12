@@ -16,18 +16,16 @@ fn main() -> Result<()> {
     )?;
 
     let tokenizer = {
-        let mut tokenizer = mospeada::tokenizers::from_pretrained(&repo)?;
+        let mut tokenizer = repo.load_tokenizer()?;
 
         let padding = tokenizers::PaddingParams::default();
-        tokenizer.tokenizer_mut().with_padding(Some(padding));
+        tokenizer.with_padding(Some(padding));
 
         let truncation = tokenizers::TruncationParams::default();
-        tokenizer
-            .tokenizer_mut()
-            .with_truncation(Some(truncation))?;
+        tokenizer.with_truncation(Some(truncation))?;
 
-        println!("tokenizer: {:?}", tokenizer.tokenizer().get_padding());
-        println!("tokenizer: {:?}", tokenizer.tokenizer().get_truncation());
+        println!("tokenizer: {:?}", tokenizer.get_padding());
+        println!("tokenizer: {:?}", tokenizer.get_truncation());
         tokenizer
     };
 
@@ -35,7 +33,7 @@ fn main() -> Result<()> {
         candle_transformers::models::bert::BertModel::load(vb, config)
     })?;
 
-    let encoded_input = tokenizer.tokenizer().encode_batch(sentences, true)?;
+    let encoded_input = tokenizer.encode_batch(sentences, true)?;
 
     let ids = encoded_input
         .iter()

@@ -20,10 +20,8 @@ fn main() -> Result<()> {
     ];
 
     let tokenizer = {
-        let mut tokenizer = mospeada::tokenizers::from_pretrained(&repo)?;
-        tokenizer
-            .tokenizer_mut()
-            .with_padding(Some(tokenizers::PaddingParams::default()));
+        let mut tokenizer = repo.load_tokenizer()?;
+        tokenizer.with_padding(Some(tokenizers::PaddingParams::default()));
 
         tokenizer
     };
@@ -32,7 +30,7 @@ fn main() -> Result<()> {
         candle_transformers::models::bert::BertForSequenceClassification::load(vb, config)
     })?;
 
-    let encoded = tokenizer.tokenizer().encode_batch(sentences, true)?;
+    let encoded = tokenizer.encode_batch(sentences, true)?;
 
     let ids = encoded
         .iter()
