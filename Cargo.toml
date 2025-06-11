@@ -4,8 +4,9 @@ members = [
     "tutorial/3.device-acceleration", 
     "tutorial/4.generation", 
     "tutorial/5.generation-gguf", 
-    "tutorial/qwen3",
     "tutorial/8.text-embeddings",
+    "tutorial/qwen3",
+    "tutorial/quantized_qwen",
 ]
 
 [workspace.dependencies]

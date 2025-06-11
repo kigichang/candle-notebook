@@ -102,7 +102,7 @@ fn main() -> Result<()> {
         tokenizer,
         &generation_config,
         template,
-        rand::random::<u64>(),
+        args.seed.unwrap_or(rand::random::<u64>()),
         args.repeat_lan_n,
         &device,
     );
@@ -160,6 +160,9 @@ struct Args {
 
     #[arg(long, default_value_t = 1024)]
     max_new_tokens: usize,
+
+    #[arg(long)]
+    seed: Option<u64>,
 }
 
 impl Args {
